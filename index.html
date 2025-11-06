@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .time-display {
+            font-size: 80px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin-bottom: 60px;
+        }
+
+        .timer-wheel {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 60px;
+        }
+
+        .wheel-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .wheel-progress {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheel-handle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ff6b5a;
+            border-radius: 50%;
+            border: 8px solid #fff;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheel-numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .number {
+            position: absolute;
+            font-size: 24px;
+            font-weight: 300;
+            color: #fff;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn.play {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .footer-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .sync-dot.syncing {
+            background: #FFC107;
+        }
+
+        .sync-dot.offline {
+            background: #F44336;
+            animation: none;
+        }
+
+        /* Play/Pause icons */
+        .play-icon::before {
+            content: '▶';
+        }
+
+        .pause-icon::before {
+            content: '⏸';
+        }
+    </style>
+</head>
+<body>
+    <div class="sync-indicator">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncStatus">Synced</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <button class="icon-btn" id="backBtn">←</button>
+            <button class="icon-btn" id="settingsBtn">⚙</button>
+        </div>
+
+        <div class="time-display" id="timeDisplay">25:00</div>
+
+        <div class="timer-wheel">
+            <svg class="wheel-bg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+            </svg>
+            <svg class="wheel-progress" viewBox="0 0 100 100" id="progressWheel">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#ff6b5a" stroke-width="8"
+                        stroke-dasharray="282.7" stroke-dashoffset="0"
+                        transform="rotate(-90 50 50)" id="progressCircle"/>
+            </svg>
+            <div class="wheel-numbers" id="wheelNumbers"></div>
+            <div class="wheel-handle" id="wheelHandle"></div>
+            <div class="wheel-center"></div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="prevBtn">⏮</button>
+            <button class="control-btn play" id="playPauseBtn">
+                <span class="play-icon"></span>
+            </button>
+            <button class="control-btn" id="nextBtn">⏭</button>
+        </div>
+
+        <div class="footer-buttons">
+            <button class="footer-btn" id="harpBtn">🔔 HARP</button>
+            <button class="footer-btn" id="appearanceBtn">🎨 APPEARANCE</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK v9+ (modular) -->
+    <script type="module" src="timer.js"></script>
+</body>
+</html>
