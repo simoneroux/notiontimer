@@ -13,13 +13,14 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #000;
+            background: #282828; /* Dark grey like image */
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
+            flex-direction: column;
         }
 
         .container {
@@ -27,91 +28,69 @@
             width: 100%;
             max-width: 500px;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            padding-top: 80px; /* Make space for top bar */
+            padding-bottom: 100px; /* Make space for bottom controls */
         }
 
-        .header {
+        /* --- Top Bar --- */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            margin-bottom: 20px;
+            padding: 20px 30px;
+            z-index: 100;
+        }
+
+        .time-display {
+            font-size: 32px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .top-icons {
+            display: flex;
+            gap: 15px;
         }
 
         .icon-btn {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: #fff;
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
         }
-
         .icon-btn:hover {
             background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
         }
 
-        .timer-select-container {
+        /* --- Timer Wheel --- */
+        .timer-wheel-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .timer-select-label {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .timer-select {
-            padding: 10px 20px;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .timer-select:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .timer-select:focus {
-            background: rgba(255, 107, 90, 0.2);
-            border-color: #ff6b5a;
-        }
-
-        .timer-select option {
-            background: #1a1a1a;
-            color: #fff;
-        }
-
-        .time-display {
-            font-size: 80px;
-            font-weight: 200;
-            letter-spacing: -2px;
-            margin-bottom: 40px;
+            position: relative;
         }
 
         .timer-wheel {
             position: relative;
             width: 350px;
             height: 350px;
-            margin: 0 auto 50px;
+            margin: 20px auto;
         }
 
         .wheel-bg {
@@ -119,43 +98,33 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
+            /* Colors from image */
+            background: conic-gradient(
+                #9B51E0 0deg 90deg,  /* 0-15 min (Top-Right) */
+                #56CCF2 90deg 180deg, /* 15-30 min (Bottom-Right) */
+                #6FCF97 180deg 270deg, /* 30-45 min (Bottom-Left) */
+                #F2C94C 270deg 315deg, /* 45-52.5 min (Yellow) */
+                #E65C4F 315deg 360deg  /* 52.5-60 min (Red/Orange) */
+            );
+            transform: rotate(-90deg); /* Puts 0deg (start of purple) at the top */
         }
 
-        .wheel-progress {
+        .wheel-ticks {
             position: absolute;
             width: 100%;
             height: 100%;
-            border-radius: 50%;
         }
 
-        .wheel-center {
+        .tick {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 2px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        .tick.large {
+            width: 4px;
+            height: 18px;
             background: #fff;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            z-index: 2;
-        }
-
-        .wheel-handle {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: #ff6b5a;
-            border-radius: 50%;
-            border: 8px solid #fff;
-            top: 50%;
-            left: 50%;
-            transform-origin: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            z-index: 1;
         }
 
         .wheel-numbers {
@@ -166,87 +135,90 @@
 
         .number {
             position: absolute;
-            font-size: 20px;
-            font-weight: 300;
-            color: rgba(255, 255, 255, 0.6);
+            font-size: 22px;
+            font-weight: 500;
+            color: #fff;
+            transform: translate(-50%, -50%);
         }
 
+        .wheel-pointer {
+            position: absolute;
+            width: 24px;
+            height: 140px; /* 40% of wheel height */
+            background: #fff;
+            border-radius: 12px 12px 0 0;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg); /* Starts at top */
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #282828;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+        }
+
+        /* --- Bottom Controls --- */
         .controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin-bottom: 50px;
+            gap: 40px;
+            padding: 20px 30px;
+            align-items: center;
+            z-index: 100;
         }
 
         .control-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: none;
             border: none;
-            color: #fff;
-            font-size: 28px;
+            color: #aaa;
+            font-size: 30px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn.play {
-            width: 90px;
-            height: 90px;
-            background: rgba(255, 107, 90, 0.3);
-            border: 2px solid #ff6b5a;
-        }
-
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .control-btn.play:hover {
-            background: rgba(255, 107, 90, 0.4);
-        }
-
-        .footer-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .footer-btn {
-            padding: 12px 24px;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #fff;
-            font-size: 12px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             transition: all 0.2s ease;
         }
-
-        .footer-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .control-btn:hover {
+            color: #fff;
+        }
+        .control-btn.play {
+            font-size: 50px;
+            color: #fff;
+        }
+        .control-btn.play:hover {
+            transform: scale(1.1);
         }
 
+        /* Play/Pause icons */
+        .play-icon::before { content: '▶'; }
+        .pause-icon::before { content: '⏸'; }
+
+        /* --- Sync Indicator --- */
         .sync-indicator {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
+            top: 28px;
+            right: 170px; /* Position next to icons */
+            padding: 5px 10px;
             border-radius: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
             font-size: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
             z-index: 100;
         }
-
         .sync-dot {
             width: 8px;
             height: 8px;
@@ -254,22 +226,14 @@
             background: #4CAF50;
             animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .sync-dot.syncing { background: #FFC107; }
+        .sync-dot.offline { background: #F44336; animation: none; }
 
-        .sync-dot.syncing {
-            background: #FFC107;
-        }
-
-        .sync-dot.offline {
-            background: #F44336;
-            animation: none;
-        }
-
-        /* Modal */
+        /* --- Modal --- */
         .modal {
             display: none;
             position: fixed;
@@ -283,11 +247,9 @@
             align-items: center;
             justify-content: center;
         }
-
         .modal.active {
             display: flex;
         }
-
         .modal-content {
             background: #1a1a1a;
             border-radius: 20px;
@@ -297,19 +259,16 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
-
         .modal-title {
             font-size: 24px;
             font-weight: 500;
         }
-
         .close-btn {
             background: none;
             border: none;
@@ -324,15 +283,12 @@
             border-radius: 50%;
             transition: all 0.2s ease;
         }
-
         .close-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-
         .settings-section {
             margin-bottom: 30px;
         }
-
         .settings-label {
             font-size: 14px;
             font-weight: 500;
@@ -343,12 +299,12 @@
             letter-spacing: 1px;
         }
 
+        /* Sound options */
         .sound-options {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px;
         }
-
         .sound-option {
             padding: 15px;
             border-radius: 12px;
@@ -358,23 +314,36 @@
             transition: all 0.2s ease;
             text-align: center;
         }
-
         .sound-option:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-
         .sound-option.selected {
             background: rgba(255, 107, 90, 0.2);
             border-color: #ff6b5a;
         }
-
         .sound-icon {
             font-size: 24px;
             margin-bottom: 8px;
         }
-
         .sound-name {
             font-size: 13px;
+        }
+
+        /* New Sync ID Input */
+        .id-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        .id-buttons {
+            display: flex;
+            gap: 10px;
         }
 
         .user-id-box {
@@ -384,105 +353,108 @@
             word-break: break-all;
             font-family: monospace;
             font-size: 12px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         .copy-btn {
-            margin-top: 10px;
-            padding: 10px 20px;
+            padding: 10px 15px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             border-radius: 8px;
             color: #fff;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 12px;
+            flex-grow: 1;
         }
-
         .copy-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Play/Pause icons */
-        .play-icon::before {
-            content: '▶';
+        /* Dropdown - from old code, moved to modal */
+        .timer-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+            font-family: inherit;
         }
-
-        .pause-icon::before {
-            content: '⏸';
+        .timer-select option {
+            background: #1a1a1a;
+            color: #fff;
         }
 
         /* Responsive */
         @media (max-width: 480px) {
             .time-display {
-                font-size: 60px;
+                font-size: 28px;
             }
-
             .timer-wheel {
                 width: 280px;
                 height: 280px;
             }
-
+            .wheel-pointer {
+                width: 20px;
+                height: 112px; /* 40% */
+                border-radius: 10px 10px 0 0;
+            }
+            .wheel-center {
+                width: 16px;
+                height: 16px;
+                border-width: 3px;
+            }
             .number {
-                font-size: 16px;
+                font-size: 18px;
+            }
+            .sync-indicator {
+                display: none; /* Hide on small screens */
             }
         }
     </style>
 </head>
 <body>
-    <div class="sync-indicator">
-        <div class="sync-dot" id="syncDot"></div>
-        <span id="syncStatus">Synced</span>
+
+    <div class="top-bar">
+        <div class="time-display" id="timeDisplay">25:00</div>
+        <div class="top-icons">
+            <div class="sync-indicator">
+                <div class="sync-dot" id="syncDot"></div>
+                <span id="syncStatus">Synced</span>
+            </div>
+            <button class="icon-btn" title="Toggle Bell (not implemented)">🔔</button>
+            <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+        </div>
     </div>
 
     <div class="container">
-        <div class="header">
-            <button class="icon-btn" id="backBtn">←</button>
-            <button class="icon-btn" id="settingsBtn">⚙</button>
+
+        <div class="timer-wheel-container">
+            <div class="timer-wheel">
+                <div class="wheel-bg"></div>
+                <div class="wheel-ticks" id="wheelTicks"></div>
+                <div class="wheel-numbers" id="wheelNumbers"></div>
+                <div class="wheel-pointer" id="wheelPointer"></div>
+                <div class="wheel-center"></div>
+            </div>
         </div>
 
-        <div class="timer-select-container">
-            <label class="timer-select-label" for="timerSelect">Duration</label>
-            <select class="timer-select" id="timerSelect">
-                <option value="5">5 minutes</option>
-                <option value="10">10 minutes</option>
-                <option value="15">15 minutes</option>
-                <option value="25" selected>25 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="45">45 minutes</option>
-                <option value="60">60 minutes</option>
-            </select>
-        </div>
+        <div></div>
 
-        <div class="time-display" id="timeDisplay">25:00</div>
-
-        <div class="timer-wheel">
-            <svg class="wheel-bg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
-            </svg>
-            <svg class="wheel-progress" viewBox="0 0 100 100" id="progressWheel">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#ff6b5a" stroke-width="8"
-                        stroke-dasharray="282.7" stroke-dashoffset="0"
-                        transform="rotate(-90 50 50)" id="progressCircle"/>
-            </svg>
-            <div class="wheel-numbers" id="wheelNumbers"></div>
-            <div class="wheel-handle" id="wheelHandle"></div>
-            <div class="wheel-center"></div>
-        </div>
-
-        <div class="controls">
-            <button class="control-btn" id="prevBtn">⏮</button>
-            <button class="control-btn play" id="playPauseBtn">
-                <span class="play-icon"></span>
-            </button>
-            <button class="control-btn" id="nextBtn">⏭</button>
-        </div>
-
-        <div class="footer-buttons">
-            <button class="footer-btn" id="testSoundBtn">🔔 Test Sound</button>
-        </div>
     </div>
 
-    <!-- Settings Modal -->
+    <div class="controls">
+        <button class="control-btn" id="prevBtn" title="Back 1 min">⏪</button>
+        <button class="control-btn play" id="playPauseBtn" title="Play/Pause">
+            <span class="play-icon"></span>
+        </button>
+        <button class="control-btn" id="nextBtn" title="Forward 1 min">⏩</button>
+    </div>
+
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -491,30 +463,42 @@
             </div>
 
             <div class="settings-section">
+                <label class="settings-label" for="timerSelect">Duration</label>
+                <select class="timer-select" id="timerSelect">
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="25" selected>25 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">60 minutes</option>
+                </select>
+            </div>
+
+            <div class="settings-section">
                 <label class="settings-label">Alert Sound</label>
                 <div class="sound-options" id="soundOptions"></div>
+                <button class="copy-btn" id="testSoundBtn" style="width: 100%; margin-top: 10px;">Test Sound</button>
             </div>
 
             <div class="settings-section">
                 <label class="settings-label">Sync ID</label>
                 <p style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">
-                    Use the same ID on all your devices to sync your timer
+                    Enter an ID to sync. Use the same ID on other devices.
                 </p>
-                <div class="user-id-box" id="userIdDisplay"></div>
-                <button class="copy-btn" id="copyIdBtn">Copy ID</button>
+                <input type="text" class="id-input" id="userIdInput" placeholder="Enter sync ID...">
+                <div class="id-buttons">
+                    <button class="copy-btn" id="syncIdBtn">Sync to this ID</button>
+                    <button class="copy-btn" id="copyIdBtn">Copy Current ID</button>
+                </div>
+                <div class="user-id-box">
+                    <strong>Current ID:</strong> <span id="userIdDisplay">Loading...</span>
+                </div>
             </div>
 
-            <div class="settings-section">
-                <label class="settings-label">About</label>
-                <p style="font-size: 13px; color: rgba(255,255,255,0.6);">
-                    Sync Pomodoro Timer v1.0<br>
-                    Real-time synchronized timer across all your devices
-                </p>
-            </div>
         </div>
     </div>
 
-    <!-- Firebase SDK v9+ (modular) -->
     <script type="module" src="timer.js"></script>
 </body>
 </html>
