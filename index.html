@@ -19,7 +19,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .container {
@@ -34,7 +34,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         .icon-btn {
@@ -49,24 +49,54 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
         }
 
         .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
             background: rgba(255, 255, 255, 0.15);
+        }
+
+        .preset-btn.active {
+            background: rgba(255, 107, 90, 0.3);
+            border-color: #ff6b5a;
         }
 
         .time-display {
             font-size: 80px;
             font-weight: 200;
             letter-spacing: -2px;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
         }
 
         .timer-wheel {
             position: relative;
             width: 350px;
             height: 350px;
-            margin: 0 auto 60px;
+            margin: 0 auto 50px;
         }
 
         .wheel-bg {
@@ -81,7 +111,6 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
         }
 
         .wheel-center {
@@ -97,6 +126,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 2;
         }
 
         .wheel-handle {
@@ -110,6 +140,7 @@
             left: 50%;
             transform-origin: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1;
         }
 
         .wheel-numbers {
@@ -120,26 +151,26 @@
 
         .number {
             position: absolute;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 300;
-            color: #fff;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .controls {
             display: flex;
             justify-content: center;
             gap: 30px;
-            margin-bottom: 60px;
+            margin-bottom: 50px;
         }
 
         .control-btn {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: #fff;
-            font-size: 32px;
+            font-size: 28px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -148,9 +179,10 @@
         }
 
         .control-btn.play {
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.15);
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 107, 90, 0.3);
+            border: 2px solid #ff6b5a;
         }
 
         .control-btn:hover {
@@ -158,26 +190,32 @@
             transform: scale(1.05);
         }
 
+        .control-btn.play:hover {
+            background: rgba(255, 107, 90, 0.4);
+        }
+
         .footer-buttons {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .footer-btn {
-            padding: 15px 30px;
+            padding: 12px 24px;
             border-radius: 25px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: #fff;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
+            transition: all 0.2s ease;
         }
 
         .footer-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .sync-indicator {
@@ -191,6 +229,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            z-index: 100;
         }
 
         .sync-dot {
@@ -215,6 +254,139 @@
             animation: none;
         }
 
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sound-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .sound-option {
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .sound-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sound-option.selected {
+            background: rgba(255, 107, 90, 0.2);
+            border-color: #ff6b5a;
+        }
+
+        .sound-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .sound-name {
+            font-size: 13px;
+        }
+
+        .user-id-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         /* Play/Pause icons */
         .play-icon::before {
             content: '▶';
@@ -222,6 +394,22 @@
 
         .pause-icon::before {
             content: '⏸';
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .time-display {
+                font-size: 60px;
+            }
+
+            .timer-wheel {
+                width: 280px;
+                height: 280px;
+            }
+
+            .number {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -236,6 +424,8 @@
             <button class="icon-btn" id="backBtn">←</button>
             <button class="icon-btn" id="settingsBtn">⚙</button>
         </div>
+
+        <div class="timer-presets" id="timerPresets"></div>
 
         <div class="time-display" id="timeDisplay">25:00</div>
 
@@ -262,8 +452,39 @@
         </div>
 
         <div class="footer-buttons">
-            <button class="footer-btn" id="harpBtn">🔔 HARP</button>
-            <button class="footer-btn" id="appearanceBtn">🎨 APPEARANCE</button>
+            <button class="footer-btn" id="testSoundBtn">🔔 Test Sound</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Settings</h2>
+                <button class="close-btn" id="closeModal">×</button>
+            </div>
+
+            <div class="settings-section">
+                <label class="settings-label">Alert Sound</label>
+                <div class="sound-options" id="soundOptions"></div>
+            </div>
+
+            <div class="settings-section">
+                <label class="settings-label">Sync ID</label>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">
+                    Use the same ID on all your devices to sync your timer
+                </p>
+                <div class="user-id-box" id="userIdDisplay"></div>
+                <button class="copy-btn" id="copyIdBtn">Copy ID</button>
+            </div>
+
+            <div class="settings-section">
+                <label class="settings-label">About</label>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.6);">
+                    Sync Pomodoro Timer v1.0<br>
+                    Real-time synchronized timer across all your devices
+                </p>
+            </div>
         </div>
     </div>
 
