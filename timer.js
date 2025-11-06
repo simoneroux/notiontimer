@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUI();
     initializeFirebase();
     setupEventListeners();
-    renderPresets();
     renderSoundOptions();
     updateDisplay();
 });
@@ -73,6 +72,14 @@ function loadUserPreferences() {
         selectedPresetMinutes = parseInt(savedPreset);
         totalSeconds = selectedPresetMinutes * 60;
         remainingSeconds = totalSeconds;
+
+        // Set the dropdown value after DOM is loaded
+        setTimeout(() => {
+            const select = document.getElementById('timerSelect');
+            if (select) {
+                select.value = savedPreset;
+            }
+        }, 0);
     }
 }
 
@@ -80,43 +87,6 @@ function loadUserPreferences() {
 function saveUserPreferences() {
     localStorage.setItem('selectedSound', selectedSound);
     localStorage.setItem('selectedPreset', selectedPresetMinutes.toString());
-}
-
-// Render timer presets
-function renderPresets() {
-    const presetsContainer = document.getElementById('timerPresets');
-    presetsContainer.innerHTML = '';
-
-    TIMER_PRESETS.forEach(preset => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn';
-        btn.textContent = preset.label;
-
-        if (preset.minutes === selectedPresetMinutes) {
-            btn.classList.add('active');
-        }
-
-        btn.addEventListener('click', () => {
-            if (isRunning) {
-                if (!confirm('Stop current timer and switch?')) return;
-                pauseTimer();
-            }
-
-            selectedPresetMinutes = preset.minutes;
-            totalSeconds = selectedPresetMinutes * 60;
-            remainingSeconds = totalSeconds;
-
-            saveUserPreferences();
-            renderPresets();
-            generateWheelNumbers();
-            updateDisplay();
-
-            if (isOnline) syncToFirebase();
-            else saveToLocalStorage();
-        });
-
-        presetsContainer.appendChild(btn);
-    });
 }
 
 // Render sound options in settings
@@ -167,12 +137,20 @@ function generateWheelNumbers() {
     const centerX = 175;
     const centerY = 175;
 
-    // Determine how many numbers to show
     const maxMinutes = selectedPresetMinutes;
-    const numberCount = Math.min(maxMinutes, 60); // Max 60 numbers
-    const step = maxMinutes > 30 ? Math.ceil(maxMinutes / 12) : (maxMinutes > 15 ? 5 : 1);
 
-    for (let i = step; i <= numberCount; i += step) {
+    // Calculate step size for clean display (only show every N minutes)
+    let step;
+    if (maxMinutes <= 10) {
+        step = 1; // Show every minute for short timers
+    } else if (maxMinutes <= 30) {
+        step = 5; // Show every 5 minutes
+    } else {
+        step = 10; // Show every 10 minutes for long timers
+    }
+
+    // Generate numbers at intervals
+    for (let i = step; i <= maxMinutes; i += step) {
         const angle = ((i / maxMinutes) * 360) - 90; // Start from top
         const radian = angle * (Math.PI / 180);
         const x = centerX + radius * Math.cos(radian);
@@ -180,7 +158,7 @@ function generateWheelNumbers() {
 
         const numberDiv = document.createElement('div');
         numberDiv.className = 'number';
-        numberDiv.textContent = i;
+        numberDiv.textContent = Math.round(i); // Ensure integer display
         numberDiv.style.left = `${x}px`;
         numberDiv.style.top = `${y}px`;
         numberDiv.style.transform = 'translate(-50%, -50%)';
@@ -248,7 +226,13 @@ function useLocalStorage() {
             selectedPresetMinutes = Math.round(totalSeconds / 60);
         }
         isRunning = false;
-        renderPresets();
+
+        // Update dropdown to match loaded state
+        const select = document.getElementById('timerSelect');
+        if (select) {
+            select.value = selectedPresetMinutes.toString();
+        }
+
         generateWheelNumbers();
         updateDisplay();
     }
@@ -272,7 +256,13 @@ function applyRemoteState(data) {
     if (data.totalSeconds && data.totalSeconds !== totalSeconds) {
         totalSeconds = data.totalSeconds;
         selectedPresetMinutes = Math.round(totalSeconds / 60);
-        renderPresets();
+
+        // Update dropdown to match synced state
+        const select = document.getElementById('timerSelect');
+        if (select) {
+            select.value = selectedPresetMinutes.toString();
+        }
+
         generateWheelNumbers();
     }
 
@@ -672,6 +662,28 @@ function showNotification(title, body) {
 
 // Event listeners
 function setupEventListeners() {
+    // Timer duration dropdown
+    document.getElementById('timerSelect').addEventListener('change', (e) => {
+        if (isRunning) {
+            if (!confirm('Stop current timer and switch duration?')) {
+                e.target.value = selectedPresetMinutes.toString();
+                return;
+            }
+            pauseTimer();
+        }
+
+        selectedPresetMinutes = parseInt(e.target.value);
+        totalSeconds = selectedPresetMinutes * 60;
+        remainingSeconds = totalSeconds;
+
+        saveUserPreferences();
+        generateWheelNumbers();
+        updateDisplay();
+
+        if (isOnline) syncToFirebase();
+        else saveToLocalStorage();
+    });
+
     // Timer controls
     document.getElementById('playPauseBtn').addEventListener('click', toggleTimer);
 

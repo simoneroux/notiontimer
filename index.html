@@ -57,32 +57,47 @@
             transform: scale(1.05);
         }
 
-        .timer-presets {
+        .timer-select-container {
             display: flex;
-            gap: 10px;
             justify-content: center;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
         }
 
-        .preset-btn {
-            padding: 8px 16px;
-            border-radius: 20px;
+        .timer-select-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timer-select {
+            padding: 10px 20px;
+            border-radius: 25px;
             background: rgba(255, 255, 255, 0.1);
-            border: 2px solid transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            font-size: 13px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
+            outline: none;
+            font-family: inherit;
         }
 
-        .preset-btn:hover {
+        .timer-select:hover {
             background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
-        .preset-btn.active {
-            background: rgba(255, 107, 90, 0.3);
+        .timer-select:focus {
+            background: rgba(255, 107, 90, 0.2);
             border-color: #ff6b5a;
+        }
+
+        .timer-select option {
+            background: #1a1a1a;
+            color: #fff;
         }
 
         .time-display {
@@ -425,7 +440,18 @@
             <button class="icon-btn" id="settingsBtn">⚙</button>
         </div>
 
-        <div class="timer-presets" id="timerPresets"></div>
+        <div class="timer-select-container">
+            <label class="timer-select-label" for="timerSelect">Duration</label>
+            <select class="timer-select" id="timerSelect">
+                <option value="5">5 minutes</option>
+                <option value="10">10 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="25" selected>25 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+            </select>
+        </div>
 
         <div class="time-display" id="timeDisplay">25:00</div>
 
