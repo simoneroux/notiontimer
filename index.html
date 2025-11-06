@@ -98,13 +98,14 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* Colors from image */
+            /* Colors from image with pink for last 5 min (pause/break) */
             background: conic-gradient(
-                #9B51E0 0deg 90deg,  /* 0-15 min (Top-Right) */
-                #56CCF2 90deg 180deg, /* 15-30 min (Bottom-Right) */
-                #6FCF97 180deg 270deg, /* 30-45 min (Bottom-Left) */
-                #F2C94C 270deg 315deg, /* 45-52.5 min (Yellow) */
-                #E65C4F 315deg 360deg  /* 52.5-60 min (Red/Orange) */
+                #9B51E0 0deg 75deg,   /* 0-12.5 min (Purple) */
+                #56CCF2 75deg 165deg, /* 12.5-27.5 min (Blue) */
+                #6FCF97 165deg 255deg, /* 27.5-42.5 min (Green) */
+                #F2C94C 255deg 315deg, /* 42.5-52.5 min (Yellow) */
+                #E65C4F 315deg 330deg, /* 52.5-55 min (Red/Orange) */
+                #FF69B4 330deg 360deg  /* 55-60 min (Pink - Break time!) */
             );
             transform: rotate(-90deg); /* Puts 0deg (start of purple) at the top */
         }

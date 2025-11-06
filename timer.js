@@ -113,9 +113,11 @@ function initializeUI() {
     generateWheelNumbers();
     updateWheelProgress();
 
-    // Display user ID in settings (already set by initializeFirebase)
-    document.getElementById('userIdDisplay').textContent = userId;
-    document.getElementById('userIdInput').value = userId;
+    // Display user ID in settings (will be set after Firebase initializes)
+    if (userId) {
+        document.getElementById('userIdDisplay').textContent = userId;
+        document.getElementById('userIdInput').value = userId;
+    }
 }
 
 // Generate wheel ticks (always 60)
@@ -198,6 +200,10 @@ async function initializeFirebase() {
         localStorage.setItem('userId', userId);
 
         console.log('Connected with User ID:', userId);
+
+        // Update UI with user ID now that we have it
+        document.getElementById('userIdDisplay').textContent = userId;
+        document.getElementById('userIdInput').value = userId;
 
         syncRef = ref(db, `timers/${userId}`);
 
@@ -375,10 +381,18 @@ function startTimer() {
     isRunning = true;
     updatePlayPauseButton();
 
+    console.log('Timer started, remaining seconds:', remainingSeconds);
+
     timerInterval = setInterval(() => {
         if (remainingSeconds > 0) {
             remainingSeconds--;
             updateDisplay();
+
+            // Play warning sound at 1 minute remaining
+            if (remainingSeconds === 60) {
+                playWarningSound();
+                showNotification('1 Minute Left!', 'Almost done with your session.');
+            }
 
             // Sync every 5 seconds while running
             if (remainingSeconds % 5 === 0) {
@@ -391,7 +405,7 @@ function startTimer() {
         } else {
             pauseTimer();
             playCompletionSound();
-            showNotification('Timer Complete!', 'Your session is finished.');
+            showNotification('Timer Complete!', 'Time for a break!');
         }
     }, 1000);
 
@@ -431,9 +445,13 @@ function resetTimer() {
 }
 
 function toggleTimer() {
+    console.log('Toggle timer clicked. Current state - isRunning:', isRunning, 'remainingSeconds:', remainingSeconds);
+
     if (isRunning) {
+        console.log('Pausing timer...');
         pauseTimer();
     } else {
+        console.log('Starting timer...');
         startTimer();
     }
 }
@@ -612,6 +630,37 @@ function playAlertSound(audioContext) {
     }
 }
 
+// Warning sound (plays at 1 minute remaining)
+function playWarningSound() {
+    if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
+        console.log('Audio not supported');
+        return;
+    }
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Two gentle beeps to warn user
+        for (let i = 0; i < 2; i++) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 600;
+            oscillator.type = 'sine';
+
+            const startTime = audioContext.currentTime + (i * 0.3);
+            gainNode.gain.setValueAtTime(0.15, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.2);
+        }
+    } catch (e) {
+        console.log('Audio error:', e);
+    }
+}
 
 // Browser notification
 function showNotification(title, body) {
