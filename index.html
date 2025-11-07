@@ -13,27 +13,35 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #282828; /* Dark grey like image */
+            background: #2a2a2a;
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
-            flex-direction: column;
         }
 
         .container {
             text-align: center;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            height: 100vh;
-            padding-top: 80px; /* Make space for top bar */
-            padding-bottom: 100px; /* Make space for bottom controls */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 100px;
+            padding-bottom: 120px;
+        }
+
+        .timer-title {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #fff;
+            opacity: 0.9;
         }
 
         /* --- Top Bar --- */
@@ -50,14 +58,16 @@
         }
 
         .time-display {
-            font-size: 32px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            font-size: 36px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            color: #fff;
         }
 
         .top-icons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
+            align-items: center;
         }
 
         .icon-btn {
@@ -67,51 +77,45 @@
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: #fff;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
         }
+
         .icon-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
 
         /* --- Timer Wheel --- */
-        .timer-wheel-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
         .timer-wheel {
             position: relative;
-            width: 350px;
-            height: 350px;
-            margin: 20px auto;
+            width: 400px;
+            height: 400px;
+            margin: 40px auto;
         }
 
-        .wheel-bg {
+        /* SVG for pie segments */
+        .wheel-svg {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            border-radius: 50%;
-            /* Colors from image with pink for last 5 min (pause/break) */
-            background: conic-gradient(
-                #9B51E0 0deg 75deg,   /* 0-12.5 min (Purple) */
-                #56CCF2 75deg 165deg, /* 12.5-27.5 min (Blue) */
-                #6FCF97 165deg 255deg, /* 27.5-42.5 min (Green) */
-                #F2C94C 255deg 315deg, /* 42.5-52.5 min (Yellow) */
-                #E65C4F 315deg 330deg, /* 52.5-55 min (Red/Orange) */
-                #FF69B4 330deg 360deg  /* 55-60 min (Pink - Break time!) */
-            );
-            transform: rotate(-90deg); /* Puts 0deg (start of purple) at the top */
+            transform: rotate(-90deg);
         }
 
-        .wheel-ticks {
+        .pie-segment {
+            transition: opacity 0.5s ease;
+        }
+
+        /* Tick marks around the circle */
+        .tick-marks {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
         }
@@ -119,120 +123,119 @@
         .tick {
             position: absolute;
             width: 2px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.7);
-        }
-        .tick.large {
-            width: 4px;
-            height: 18px;
-            background: #fff;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            top: 0;
+            left: 50%;
+            transform-origin: 50% 200px;
+            margin-left: -1px;
         }
 
-        .wheel-numbers {
+        .tick.major {
+            height: 20px;
+            width: 3px;
+            margin-left: -1.5px;
+        }
+
+        /* Minute numbers around the circle */
+        .minute-numbers {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
         }
 
-        .number {
+        .minute-number {
             position: absolute;
             font-size: 22px;
-            font-weight: 500;
-            color: #fff;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.8);
             transform: translate(-50%, -50%);
+            z-index: 5;
         }
 
+        /* Pointer */
         .wheel-pointer {
             position: absolute;
-            width: 24px;
-            height: 140px; /* 40% of wheel height */
+            width: 16px;
+            height: 170px;
             background: #fff;
-            border-radius: 12px 12px 0 0;
+            border: 2px solid #000;
+            border-radius: 8px 8px 0 0;
             bottom: 50%;
             left: 50%;
             transform-origin: bottom center;
-            transform: translateX(-50%) rotate(0deg); /* Starts at top */
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 1s linear;
             z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
+        /* Pointer tip - white ball */
+        .pointer-tip {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 28px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Center dot */
         .wheel-center {
             position: absolute;
             width: 20px;
             height: 20px;
-            background: #282828;
-            border: 4px solid #fff;
+            background: #000;
+            border: 3px solid #fff;
             border-radius: 50%;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 11;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
         }
 
         /* --- Bottom Controls --- */
         .controls {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             justify-content: center;
-            gap: 40px;
-            padding: 20px 30px;
+            gap: 30px;
             align-items: center;
             z-index: 100;
         }
 
         .control-btn {
-            background: none;
+            background: rgba(255, 255, 255, 0.15);
             border: none;
-            color: #aaa;
-            font-size: 30px;
+            color: #fff;
+            font-size: 24px;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-        .control-btn:hover {
-            color: #fff;
-        }
-        .control-btn.play {
-            font-size: 50px;
-            color: #fff;
-        }
-        .control-btn.play:hover {
-            transform: scale(1.1);
-        }
-
-        /* Play/Pause icons */
-        .play-icon::before { content: '▶'; }
-        .pause-icon::before { content: '⏸'; }
-
-        /* --- Sync Indicator --- */
-        .sync-indicator {
-            position: fixed;
-            top: 28px;
-            right: 170px; /* Position next to icons */
-            padding: 5px 10px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            font-size: 12px;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            z-index: 100;
+            justify-content: center;
         }
-        .sync-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4CAF50;
-            animation: pulse 2s infinite;
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .sync-dot.syncing { background: #FFC107; }
-        .sync-dot.offline { background: #F44336; animation: none; }
+
+        .play-icon::before { content: '▶'; }
+        .pause-icon::before { content: '⏸'; }
 
         /* --- Modal --- */
         .modal {
@@ -242,34 +245,39 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(10px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
+
         .modal.active {
             display: flex;
         }
+
         .modal-content {
             background: #1a1a1a;
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 30px;
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
+
         .modal-title {
             font-size: 24px;
             font-weight: 500;
         }
+
         .close-btn {
             background: none;
             border: none;
@@ -282,14 +290,17 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
         }
+
         .close-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
+
         .settings-section {
             margin-bottom: 30px;
         }
+
         .settings-label {
             font-size: 14px;
             font-weight: 500;
@@ -300,12 +311,12 @@
             letter-spacing: 1px;
         }
 
-        /* Sound options */
         .sound-options {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px;
         }
+
         .sound-option {
             padding: 15px;
             border-radius: 12px;
@@ -315,22 +326,25 @@
             transition: all 0.2s ease;
             text-align: center;
         }
+
         .sound-option:hover {
             background: rgba(255, 255, 255, 0.1);
         }
+
         .sound-option.selected {
             background: rgba(255, 107, 90, 0.2);
             border-color: #ff6b5a;
         }
+
         .sound-icon {
             font-size: 24px;
             margin-bottom: 8px;
         }
+
         .sound-name {
             font-size: 13px;
         }
 
-        /* New Sync ID Input */
         .id-input {
             width: 100%;
             padding: 12px;
@@ -342,6 +356,7 @@
             font-family: monospace;
             margin-bottom: 10px;
         }
+
         .id-buttons {
             display: flex;
             gap: 10px;
@@ -368,52 +383,48 @@
             font-size: 12px;
             flex-grow: 1;
         }
+
         .copy-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Dropdown - from old code, moved to modal */
-        .timer-select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            outline: none;
-            font-family: inherit;
-        }
-        .timer-select option {
-            background: #1a1a1a;
-            color: #fff;
-        }
-
         /* Responsive */
         @media (max-width: 480px) {
+            .container {
+                padding-top: 80px;
+                padding-bottom: 100px;
+            }
+
+            .timer-wheel {
+                width: 340px;
+                height: 340px;
+            }
+
+            .wheel-pointer {
+                width: 14px;
+                height: 153px;
+            }
+
+            .pointer-tip {
+                width: 24px;
+                height: 24px;
+            }
+
             .time-display {
                 font-size: 28px;
             }
-            .timer-wheel {
-                width: 280px;
-                height: 280px;
-            }
-            .wheel-pointer {
-                width: 20px;
-                height: 112px; /* 40% */
-                border-radius: 10px 10px 0 0;
-            }
-            .wheel-center {
-                width: 16px;
-                height: 16px;
-                border-width: 3px;
-            }
-            .number {
+
+            .minute-number {
                 font-size: 18px;
             }
-            .sync-indicator {
-                display: none; /* Hide on small screens */
+
+            .timer-title {
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+
+            .top-bar {
+                padding: 15px 20px;
             }
         }
     </style>
@@ -423,37 +434,29 @@
     <div class="top-bar">
         <div class="time-display" id="timeDisplay">25:00</div>
         <div class="top-icons">
-            <div class="sync-indicator">
-                <div class="sync-dot" id="syncDot"></div>
-                <span id="syncStatus">Synced</span>
-            </div>
-            <button class="icon-btn" title="Toggle Bell (not implemented)">🔔</button>
             <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
         </div>
     </div>
 
     <div class="container">
-
-        <div class="timer-wheel-container">
-            <div class="timer-wheel">
-                <div class="wheel-bg"></div>
-                <div class="wheel-ticks" id="wheelTicks"></div>
-                <div class="wheel-numbers" id="wheelNumbers"></div>
-                <div class="wheel-pointer" id="wheelPointer"></div>
-                <div class="wheel-center"></div>
+        <h1 class="timer-title" id="timerTitle"></h1>
+        <div class="timer-wheel">
+            <svg class="wheel-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" id="wheelSvg">
+                <!-- Pie segments generated by JavaScript -->
+            </svg>
+            <div class="tick-marks" id="tickMarks"></div>
+            <div class="minute-numbers" id="minuteNumbers"></div>
+            <div class="wheel-pointer" id="wheelPointer">
+                <div class="pointer-tip"></div>
             </div>
+            <div class="wheel-center"></div>
         </div>
-
-        <div></div>
-
     </div>
 
     <div class="controls">
-        <button class="control-btn" id="prevBtn" title="Back 1 min">⏪</button>
         <button class="control-btn play" id="playPauseBtn" title="Play/Pause">
             <span class="play-icon"></span>
         </button>
-        <button class="control-btn" id="nextBtn" title="Forward 1 min">⏩</button>
     </div>
 
     <div class="modal" id="settingsModal">
@@ -461,19 +464,6 @@
             <div class="modal-header">
                 <h2 class="modal-title">Settings</h2>
                 <button class="close-btn" id="closeModal">×</button>
-            </div>
-
-            <div class="settings-section">
-                <label class="settings-label" for="timerSelect">Duration</label>
-                <select class="timer-select" id="timerSelect">
-                    <option value="5">5 minutes</option>
-                    <option value="10">10 minutes</option>
-                    <option value="15">15 minutes</option>
-                    <option value="25" selected>25 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="60">60 minutes</option>
-                </select>
             </div>
 
             <div class="settings-section">
@@ -496,10 +486,389 @@
                     <strong>Current ID:</strong> <span id="userIdDisplay">Loading...</span>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <script type="module" src="timer.js"></script>
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGQrPw8ZXeViYKILlHl8YPNvKeyWW2Zxc",
+            authDomain: "pomodoro-9ea16.firebaseapp.com",
+            databaseURL: "https://pomodoro-9ea16-default-rtdb.firebaseio.com",
+            projectId: "pomodoro-9ea16",
+            storageBucket: "pomodoro-9ea16.firebasestorage.app",
+            messagingSenderId: "637893906536",
+            appId: "1:637893906536:web:71c2bcf3c10b15b73dc2ec"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Timer state
+        const TOTAL_DURATION = 25 * 60; // Fixed 25 minutes
+        let timeRemaining = TOTAL_DURATION;
+        let isRunning = false;
+        let timerInterval = null;
+        let userId = localStorage.getItem('userId') || generateUserId();
+        let selectedSound = localStorage.getItem('selectedSound') || 'bell';
+
+        localStorage.setItem('userId', userId);
+
+        // Parse URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                title: params.get('title') || '',
+                action: params.get('action') || '', // 'start' or 'reset'
+            };
+        }
+
+        const urlParams = getUrlParams();
+
+        // Color scheme for 5-minute segments
+        const colors = [
+            '#FF6B9D', // Pink (25-21)
+            '#FF5757', // Red (20-16)
+            '#FFD93D', // Yellow (15-11)
+            '#6BCB77', // Green (10-6)
+            '#4D96FF'  // Blue (5-0)
+        ];
+
+        // Sound options
+        const sounds = {
+            bell: { icon: '🔔', name: 'Bell', url: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
+            chime: { icon: '🎵', name: 'Chime', url: 'https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3' },
+            ding: { icon: '🔊', name: 'Ding', url: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3' }
+        };
+
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substring(2, 15);
+        }
+
+        // Initialize UI
+        function init() {
+            createPieSegments();
+            createTickMarks();
+            createMinuteNumbers();
+            updateDisplay();
+            setupSoundOptions();
+            document.getElementById('userIdDisplay').textContent = userId;
+
+            // Set title from URL parameter
+            if (urlParams.title) {
+                document.getElementById('timerTitle').textContent = urlParams.title;
+            }
+
+            // Handle action from URL parameter
+            if (urlParams.action === 'start') {
+                startTimer();
+            } else if (urlParams.action === 'reset') {
+                resetTimer();
+            }
+
+            // Sync with Firebase
+            syncWithFirebase();
+        }
+
+        function createPieSegments() {
+            const svg = document.getElementById('wheelSvg');
+            const segments = 5; // 5 segments of 5 minutes each
+
+            // Colors arranged so they match the visual order clockwise from top
+            const segmentColors = [
+                '#FF6B9D', // 25-20 (pink) - top
+                '#FF5757', // 20-15 (red)
+                '#FFD93D', // 15-10 (yellow)
+                '#6BCB77', // 10-5 (green)
+                '#4D96FF'  // 5-0 (blue)
+            ];
+
+            for (let i = 0; i < segments; i++) {
+                const startAngle = (i * 72);
+                const endAngle = ((i + 1) * 72);
+                const path = createPiePath(startAngle, endAngle);
+
+                const segment = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                segment.setAttribute('d', path);
+                segment.setAttribute('fill', segmentColors[i]);
+                segment.setAttribute('class', 'pie-segment');
+                segment.setAttribute('data-segment', i);
+                svg.appendChild(segment);
+            }
+        }
+
+        function createPiePath(startAngle, endAngle) {
+            const radius = 200;
+            const centerX = 200;
+            const centerY = 200;
+
+            const startRad = (startAngle - 90) * Math.PI / 180;
+            const endRad = (endAngle - 90) * Math.PI / 180;
+
+            const x1 = centerX + radius * Math.cos(startRad);
+            const y1 = centerY + radius * Math.sin(startRad);
+            const x2 = centerX + radius * Math.cos(endRad);
+            const y2 = centerY + radius * Math.sin(endRad);
+
+            const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+            return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+        }
+
+        function createTickMarks() {
+            const container = document.getElementById('tickMarks');
+            for (let i = 0; i < 60; i++) {
+                const tick = document.createElement('div');
+                tick.className = i % 5 === 0 ? 'tick major' : 'tick';
+                tick.style.transform = `rotate(${i * 6}deg)`;
+                container.appendChild(tick);
+            }
+        }
+
+        function createMinuteNumbers() {
+            const container = document.getElementById('minuteNumbers');
+            const radius = 165;
+            const centerX = 200;
+            const centerY = 200;
+
+            // Show minute markers at 5, 10, 15, 20, 25 (not 0)
+            for (let i = 5; i <= 25; i += 5) {
+                const angle = (i / 25) * 360 - 90;
+                const rad = angle * Math.PI / 180;
+                const x = centerX + radius * Math.cos(rad);
+                const y = centerY + radius * Math.sin(rad);
+
+                const number = document.createElement('div');
+                number.className = 'minute-number';
+                number.textContent = i;
+                number.style.left = `${x}px`;
+                number.style.top = `${y}px`;
+                container.appendChild(number);
+            }
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('timeDisplay').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Update pointer rotation (starts at top, goes clockwise)
+            const progress = (TOTAL_DURATION - timeRemaining) / TOTAL_DURATION;
+            const rotation = progress * 360;
+            document.getElementById('wheelPointer').style.transform =
+                `translateX(-50%) rotate(${rotation}deg)`;
+
+            // Update segment visibility
+            updateSegments();
+        }
+
+        function updateSegments() {
+            const segments = document.querySelectorAll('.pie-segment');
+            const minutesRemaining = timeRemaining / 60;
+
+            segments.forEach((segment, index) => {
+                const segmentStart = 25 - (index * 5);
+                const segmentEnd = 25 - ((index + 1) * 5);
+
+                if (minutesRemaining <= segmentEnd) {
+                    segment.style.opacity = '0.3';
+                } else {
+                    segment.style.opacity = '1';
+                }
+            });
+        }
+
+        function tick() {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                updateDisplay();
+                syncToFirebase();
+
+                if (timeRemaining === 0) {
+                    isRunning = false;
+                    playSound();
+                    updatePlayButton();
+                }
+            }
+        }
+
+        function toggleTimer() {
+            isRunning = !isRunning;
+
+            if (isRunning) {
+                timerInterval = setInterval(tick, 1000);
+            } else {
+                clearInterval(timerInterval);
+            }
+
+            updatePlayButton();
+            syncToFirebase();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeRemaining = TOTAL_DURATION;
+            updateDisplay();
+            updatePlayButton();
+            syncToFirebase();
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                toggleTimer();
+            }
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('playPauseBtn');
+            const icon = btn.querySelector('span');
+            icon.className = isRunning ? 'pause-icon' : 'play-icon';
+        }
+
+        function playSound() {
+            const audio = new Audio(sounds[selectedSound].url);
+            audio.play().catch(e => console.log('Sound play failed:', e));
+        }
+
+        function setupSoundOptions() {
+            const container = document.getElementById('soundOptions');
+            Object.entries(sounds).forEach(([key, sound]) => {
+                const option = document.createElement('div');
+                option.className = 'sound-option' + (key === selectedSound ? ' selected' : '');
+                option.innerHTML = `
+                    <div class="sound-icon">${sound.icon}</div>
+                    <div class="sound-name">${sound.name}</div>
+                `;
+                option.addEventListener('click', () => {
+                    selectedSound = key;
+                    localStorage.setItem('selectedSound', key);
+                    document.querySelectorAll('.sound-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                });
+                container.appendChild(option);
+            });
+        }
+
+        // Firebase sync
+        let syncListener = null;
+        let lastSyncTime = 0;
+        let isSyncing = false;
+
+        function syncToFirebase() {
+            // Prevent sync loops
+            if (isSyncing) return;
+
+            const now = Date.now();
+            // Debounce syncs to max once per 500ms
+            if (now - lastSyncTime < 500) return;
+
+            lastSyncTime = now;
+
+            const timerRef = ref(database, `timers/${userId}`);
+            set(timerRef, {
+                timeRemaining,
+                isRunning,
+                lastUpdate: now
+            }).catch(err => {
+                console.error('Firebase sync error:', err);
+            });
+        }
+
+        function syncWithFirebase() {
+            // Remove old listener if exists
+            if (syncListener) {
+                syncListener();
+                syncListener = null;
+            }
+
+            const timerRef = ref(database, `timers/${userId}`);
+
+            // Set up new listener
+            syncListener = onValue(timerRef, (snapshot) => {
+                const data = snapshot.val();
+
+                // Skip if no data or if this is our own update
+                if (!data || !data.lastUpdate) return;
+
+                // Prevent sync loops - don't process updates we just sent
+                const timeSinceLastSync = Date.now() - lastSyncTime;
+                if (timeSinceLastSync < 1000) return;
+
+                isSyncing = true;
+
+                const timeDiff = Math.floor((Date.now() - data.lastUpdate) / 1000);
+
+                if (data.isRunning) {
+                    timeRemaining = Math.max(0, data.timeRemaining - timeDiff);
+
+                    if (!isRunning) {
+                        isRunning = true;
+                        timerInterval = setInterval(tick, 1000);
+                        updatePlayButton();
+                    }
+                } else {
+                    timeRemaining = data.timeRemaining;
+                    if (isRunning) {
+                        isRunning = false;
+                        clearInterval(timerInterval);
+                        updatePlayButton();
+                    }
+                }
+
+                updateDisplay();
+
+                setTimeout(() => {
+                    isSyncing = false;
+                }, 100);
+            }, (error) => {
+                console.error('Firebase listener error:', error);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('playPauseBtn').addEventListener('click', toggleTimer);
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.add('active');
+        });
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.remove('active');
+        });
+        document.getElementById('testSoundBtn').addEventListener('click', playSound);
+
+        document.getElementById('syncIdBtn').addEventListener('click', () => {
+            const newId = document.getElementById('userIdInput').value.trim();
+            if (newId) {
+                // Stop current timer if running
+                if (isRunning) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    updatePlayButton();
+                }
+
+                // Update user ID
+                userId = newId;
+                localStorage.setItem('userId', userId);
+                document.getElementById('userIdDisplay').textContent = userId;
+
+                // Re-initialize Firebase sync with new ID
+                syncWithFirebase();
+
+                alert('Synced to ID: ' + userId);
+            }
+        });
+
+        document.getElementById('copyIdBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(userId);
+            alert('ID copied to clipboard!');
+        });
+
+        // Initialize
+        init();
+    </script>
 </body>
 </html>
