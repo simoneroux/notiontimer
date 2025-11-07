@@ -400,14 +400,24 @@
                 height: 340px;
             }
 
+            .tick {
+                transform-origin: 50% 170px;
+            }
+
             .wheel-pointer {
                 width: 14px;
-                height: 153px;
+                height: 144px;
             }
 
             .pointer-tip {
                 width: 24px;
                 height: 24px;
+                top: -5px;
+            }
+
+            .wheel-center {
+                width: 18px;
+                height: 18px;
             }
 
             .time-display {
@@ -779,7 +789,7 @@
             });
         }
 
-        function syncWithFirebase() {
+        async function syncWithFirebase() {
             // Remove old listener if exists
             if (syncListener) {
                 syncListener();
@@ -788,7 +798,46 @@
 
             const timerRef = ref(database, `timers/${userId}`);
 
-            // Set up new listener
+            // First, load initial state
+            try {
+                const snapshot = await get(timerRef);
+                const data = snapshot.val();
+
+                if (data) {
+                    console.log('Loaded initial state for user:', userId, data);
+
+                    // Apply the loaded state
+                    const timeDiff = Math.floor((Date.now() - data.lastUpdate) / 1000);
+
+                    if (data.isRunning) {
+                        timeRemaining = Math.max(0, data.timeRemaining - timeDiff);
+
+                        if (timeRemaining > 0) {
+                            isRunning = true;
+                            clearInterval(timerInterval);
+                            timerInterval = setInterval(tick, 1000);
+                        } else {
+                            isRunning = false;
+                            timeRemaining = 0;
+                        }
+                    } else {
+                        timeRemaining = data.timeRemaining;
+                        isRunning = false;
+                        clearInterval(timerInterval);
+                    }
+
+                    updateDisplay();
+                    updatePlayButton();
+                } else {
+                    console.log('No previous state found for user:', userId);
+                    // Save current state as initial state
+                    await syncToFirebase();
+                }
+            } catch (error) {
+                console.error('Error loading initial state:', error);
+            }
+
+            // Set up real-time listener
             syncListener = onValue(timerRef, (snapshot) => {
                 const data = snapshot.val();
 
@@ -840,7 +889,7 @@
         });
         document.getElementById('testSoundBtn').addEventListener('click', playSound);
 
-        document.getElementById('syncIdBtn').addEventListener('click', () => {
+        document.getElementById('syncIdBtn').addEventListener('click', async () => {
             const newId = document.getElementById('userIdInput').value.trim();
             if (newId) {
                 // Stop current timer if running
@@ -855,10 +904,10 @@
                 localStorage.setItem('userId', userId);
                 document.getElementById('userIdDisplay').textContent = userId;
 
-                // Re-initialize Firebase sync with new ID
-                syncWithFirebase();
+                // Re-initialize Firebase sync with new ID and load their state
+                await syncWithFirebase();
 
-                alert('Synced to ID: ' + userId);
+                alert('Synced to ID: ' + userId + '\nTimer state loaded from Firebase.');
             }
         });
 
