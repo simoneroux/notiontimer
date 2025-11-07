@@ -525,6 +525,9 @@
         let userId = localStorage.getItem('userId') || generateUserId();
         let selectedSound = localStorage.getItem('selectedSound') || 'bell';
 
+        // Generate unique session ID to distinguish this browser tab from others
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+
         localStorage.setItem('userId', userId);
 
         // Parse URL parameters
@@ -783,7 +786,8 @@
             set(timerRef, {
                 timeRemaining,
                 isRunning,
-                lastUpdate: now
+                lastUpdate: now,
+                sessionId: sessionId // Include session ID to identify source
             }).catch(err => {
                 console.error('Firebase sync error:', err);
             });
@@ -841,12 +845,13 @@
             syncListener = onValue(timerRef, (snapshot) => {
                 const data = snapshot.val();
 
-                // Skip if no data or if this is our own update
+                // Skip if no data
                 if (!data || !data.lastUpdate) return;
 
-                // Prevent sync loops - don't process updates we just sent
-                const timeSinceLastSync = Date.now() - lastSyncTime;
-                if (timeSinceLastSync < 1000) return;
+                // Prevent sync loops - ignore updates from our own session
+                if (data.sessionId === sessionId) return;
+
+                console.log('Received update from another device:', data);
 
                 isSyncing = true;
 
