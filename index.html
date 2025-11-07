@@ -158,15 +158,15 @@
         /* Pointer */
         .wheel-pointer {
             position: absolute;
-            width: 16px;
+            width: 12px; /* Reduced from 16px */
             height: 170px;
             background: #fff;
             border: 2px solid #000;
-            border-radius: 8px 8px 0 0;
+            border-radius: 6px 6px 0 0;
             bottom: 50%;
-            left: 50%;
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(0deg);
+            left: calc(50% - 6px); /* Center the 12px pointer (half of width) */
+            transform-origin: 6px 100%; /* Rotate around center bottom (6px = half width, 100% = bottom) */
+            transform: rotate(0deg);
             transition: transform 1s linear;
             z-index: 10;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -175,7 +175,7 @@
         /* Pointer tip - white ball */
         .pointer-tip {
             position: absolute;
-            top: -6px;
+            top: -10px; /* Adjusted to sit on top of pointer */
             left: 50%;
             transform: translateX(-50%);
             width: 28px;
@@ -405,14 +405,17 @@
             }
 
             .wheel-pointer {
-                width: 14px;
+                width: 10px;
                 height: 144px;
+                border-radius: 5px 5px 0 0;
+                left: calc(50% - 5px); /* Center the 10px pointer (half of width) */
+                transform-origin: 5px 100%; /* Rotate around center bottom (5px = half width, 100% = bottom) */
             }
 
             .pointer-tip {
                 width: 24px;
                 height: 24px;
-                top: -5px;
+                top: -9px;
             }
 
             .wheel-center {
@@ -676,7 +679,7 @@
             const progress = (TOTAL_DURATION - timeRemaining) / TOTAL_DURATION;
             const rotation = progress * 360;
             document.getElementById('wheelPointer').style.transform =
-                `translateX(-50%) rotate(${rotation}deg)`;
+                `rotate(${rotation}deg)`;
 
             // Update segment visibility
             updateSegments();
