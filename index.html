@@ -569,6 +569,7 @@
             updateDisplay();
             setupSoundOptions();
             document.getElementById('userIdDisplay').textContent = userId;
+            document.getElementById('userIdInput').value = userId;
 
             // Set title from URL parameter
             if (urlParams.title) {
@@ -643,22 +644,24 @@
 
         function createMinuteNumbers() {
             const container = document.getElementById('minuteNumbers');
-            const radius = 165;
-            const centerX = 200;
-            const centerY = 200;
+
+            // Use percentage-based positioning to work on all screen sizes
+            // Center is at 50%, radius is 41.25% of container (165/400 = 0.4125)
+            const radiusPercent = 41.25;
+            const centerPercent = 50;
 
             // Show minute markers at 5, 10, 15, 20, 25 (not 0)
             for (let i = 5; i <= 25; i += 5) {
                 const angle = (i / 25) * 360 - 90;
                 const rad = angle * Math.PI / 180;
-                const x = centerX + radius * Math.cos(rad);
-                const y = centerY + radius * Math.sin(rad);
+                const x = centerPercent + radiusPercent * Math.cos(rad);
+                const y = centerPercent + radiusPercent * Math.sin(rad);
 
                 const number = document.createElement('div');
                 number.className = 'minute-number';
                 number.textContent = i;
-                number.style.left = `${x}px`;
-                number.style.top = `${y}px`;
+                number.style.left = `${x}%`;
+                number.style.top = `${y}%`;
                 container.appendChild(number);
             }
         }
@@ -703,8 +706,11 @@
 
                 if (timeRemaining === 0) {
                     isRunning = false;
+                    clearInterval(timerInterval);
+                    timerInterval = null;
                     playSound();
                     updatePlayButton();
+                    syncToFirebase(); // Sync the completed state
                 }
             }
         }
