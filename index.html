@@ -100,9 +100,14 @@
         /* CSS-based pie timer */
         .pie {
             --size: 400;
-            --pass-color: #FF6B9D; /* Elapsed time color (pink) */
-            --remain-color: #4D96FF; /* Remaining time color (blue) */
-            background: var(--remain-color);
+            background: conic-gradient(
+                from -90deg,
+                #FF6B9D 0deg 72deg,     /* Segment 1: Pink (0-5 min) */
+                #FF5757 72deg 144deg,    /* Segment 2: Red (5-10 min) */
+                #FFD93D 144deg 216deg,   /* Segment 3: Yellow (10-15 min) */
+                #6BCB77 216deg 288deg,   /* Segment 4: Green (15-20 min) */
+                #4D96FF 288deg 360deg    /* Segment 5: Blue (20-25 min) */
+            );
             border-radius: 100%;
             height: calc(var(--size) * 1px);
             width: calc(var(--size) * 1px);
@@ -110,10 +115,11 @@
             top: 0;
             left: 0;
             clip-path: circle(50%);
-            z-index: 1; /* Behind ticks, numbers, and pointer */
+            z-index: 1;
         }
 
         .pie__segment {
+            /* Dark overlay that covers elapsed time */
             --a: calc(var(--over50, 0) * -100%);
             --b: calc((1 + var(--over50, 0)) * 100%);
             clip-path: polygon(var(--a) var(--a), var(--b) var(--a), var(--b) var(--b), var(--a) var(--b));
@@ -123,11 +129,12 @@
             transform: translate(0%, 50%) rotate(calc(var(--offset, 90) * 1deg));
             transform-origin: 100% 50%;
             transition: clip-path 0s;
+            z-index: 2;
         }
 
         .pie__segment:after,
         .pie__segment:before {
-            background: var(--pass-color);
+            background: rgba(42, 42, 42, 0.85); /* Dark dimmer for elapsed time */
             content: '';
             position: absolute;
             height: 100%;
@@ -155,6 +162,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 3;
         }
 
         .tick {
@@ -181,6 +189,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 5;
         }
 
         .minute-number {
@@ -189,7 +198,6 @@
             font-weight: 600;
             color: rgba(0, 0, 0, 0.8);
             transform: translate(-50%, -50%);
-            z-index: 5;
         }
 
         /* Pointer */
