@@ -12,36 +12,15 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #2a2a2a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #2a2a2a; /* Dark Grey Background */
             color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding-top: 100px;
-            padding-bottom: 120px;
-        }
-
-        .timer-title {
-            font-size: 28px;
-            font-weight: 500;
-            margin-bottom: 20px;
-            color: #fff;
-            opacity: 0.9;
+            overflow: hidden;
         }
 
         /* --- Top Bar --- */
@@ -58,16 +37,10 @@
         }
 
         .time-display {
-            font-size: 36px;
-            font-weight: 400;
-            letter-spacing: 1px;
+            font-size: 42px;
+            font-weight: 300;
             color: #fff;
-        }
-
-        .top-icons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
+            font-variant-numeric: tabular-nums;
         }
 
         .icon-btn {
@@ -85,477 +58,276 @@
             transition: background 0.2s ease;
         }
 
-        .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
 
-        /* --- Timer Wheel --- */
-        .timer-wheel {
+        /* --- Timer Container --- */
+        .timer-container {
             position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 40px auto;
+            width: 360px;
+            height: 360px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* CSS-based pie timer */
-        .pie {
-            --size: 400;
-            background: conic-gradient(
-                from -90deg,
-                #FF6B9D 0deg 72deg,     /* Segment 1: Pink (0-5 min) */
-                #FF5757 72deg 144deg,    /* Segment 2: Red (5-10 min) */
-                #FFD93D 144deg 216deg,   /* Segment 3: Yellow (10-15 min) */
-                #6BCB77 216deg 288deg,   /* Segment 4: Green (15-20 min) */
-                #4D96FF 288deg 360deg    /* Segment 5: Blue (20-25 min) */
-            );
-            border-radius: 100%;
-            height: calc(var(--size) * 1px);
-            width: calc(var(--size) * 1px);
-            position: absolute;
-            top: 0;
-            left: 0;
-            clip-path: circle(50%);
-            z-index: 1;
-        }
-
-        .pie__segment {
-            /* Dark overlay that covers elapsed time */
-            --a: calc(var(--over50, 0) * -100%);
-            --b: calc((1 + var(--over50, 0)) * 100%);
-            clip-path: polygon(var(--a) var(--a), var(--b) var(--a), var(--b) var(--b), var(--a) var(--b));
-            height: 100%;
+        /* 1. The Colorful Background (Static) */
+        .dial-colors {
             position: absolute;
             width: 100%;
-            transform: translate(0%, 50%) rotate(calc(var(--offset, 90) * 1deg));
-            transform-origin: 100% 50%;
-            transition: clip-path 0s;
+            height: 100%;
+            border-radius: 50%;
+            /* The specific color bands from the screenshot */
+            background: conic-gradient(
+                from -90deg,
+                #FF4C4C 0deg 30deg,   /* Red 0-5 min */
+                #FF9F00 30deg 60deg,  /* Orange 5-10 min */
+                #FFCD00 60deg 90deg,  /* Yellow 10-15 min */
+                #50C8C6 90deg 150deg, /* Teal 15-25 min */
+                transparent 150deg 360deg /* Rest is empty */
+            );
+        }
+
+        /* 2. The Mask (Rotates to hide colors) */
+        /* We use a dynamic conic gradient that starts transparent and goes dark */
+        .dial-mask {
+            position: absolute;
+            width: 101%; /* Slight overlap to prevent bleed */
+            height: 101%;
+            border-radius: 50%;
+            /* Variable controlled by JS */
+            background: conic-gradient(
+                from -90deg,
+                transparent 0deg,
+                transparent var(--angle, 150deg),
+                #2a2a2a var(--angle, 150deg),
+                #2a2a2a 360deg
+            );
             z-index: 2;
         }
 
-        .pie__segment:after,
-        .pie__segment:before {
-            background: rgba(42, 42, 42, 0.85); /* Dark dimmer for elapsed time */
-            content: '';
+        /* 3. Tick Marks & Numbers */
+        .dial-overlay {
             position: absolute;
-            height: 100%;
-            width: 100%;
-        }
-
-        .pie__segment:before {
-            --degrees: calc((var(--value, 0) / 100) * 360);
-            content: '';
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            transform: translate(0, 100%) rotate(calc(var(--degrees) * 1deg));
-            transform-origin: 50% 0%;
-        }
-
-        .pie__segment:after {
-            opacity: var(--over50, 0);
-        }
-
-        /* Tick marks around the circle */
-        .tick-marks {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             z-index: 3;
+            pointer-events: none;
         }
 
         .tick {
             position: absolute;
+            background: rgba(255, 255, 255, 0.4);
             width: 2px;
-            height: 12px;
-            background: rgba(0, 0, 0, 0.6);
-            top: 0;
+            height: 10px;
             left: 50%;
-            transform-origin: 50% 200px;
-            margin-left: -1px;
+            top: 0;
+            transform-origin: 50% 180px; /* Half of container width */
         }
 
         .tick.major {
-            height: 20px;
+            background: rgba(255, 255, 255, 0.8);
             width: 3px;
-            margin-left: -1.5px;
+            height: 18px;
         }
 
-        /* Minute numbers around the circle */
-        .minute-numbers {
+        .minute-num {
             position: absolute;
-            top: 0;
-            left: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255,255,255, 0.6);
+            transform: translate(-50%, -50%);
+            width: 40px;
+            text-align: center;
+        }
+
+        /* 4. The Pointer */
+        .pointer-container {
+            position: absolute;
             width: 100%;
             height: 100%;
-            z-index: 5;
-        }
-
-        .minute-number {
-            position: absolute;
-            font-size: 22px;
-            font-weight: 600;
-            color: rgba(0, 0, 0, 0.8);
-            transform: translate(-50%, -50%);
-        }
-
-        /* Pointer */
-        .wheel-pointer {
-            position: absolute;
-            width: 12px; /* Reduced from 16px */
-            height: 170px;
-            background: #fff;
-            border: 2px solid #000;
-            border-radius: 6px 6px 0 0;
-            bottom: 50%;
-            left: calc(50% - 6px); /* Center the 12px pointer (half of width) */
-            transform-origin: 6px 100%; /* Rotate around center bottom (6px = half width, 100% = bottom) */
-            transform: rotate(0deg);
-            transition: transform 1s linear;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            transform: rotate(var(--angle, 150deg));
+            transition: transform 1s linear;
+            pointer-events: none;
         }
 
-        /* Pointer tip - white ball */
+        .pointer-hand {
+            position: absolute;
+            left: 50%;
+            bottom: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            /* CSS Triangle for the wedge shape */
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 140px solid #fff;
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+        }
+
+        /* The white ball at the tip */
         .pointer-tip {
             position: absolute;
-            top: -10px; /* Adjusted to sit on top of pointer */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 28px;
-            height: 28px;
-            background: #fff;
-            border: 2px solid #000;
-            border-radius: 50%;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Center dot */
-        .wheel-center {
-            position: absolute;
+            top: -14px; /* Position relative to the bottom of the wedge (which is actually the top visually) */
+            left: -10px; /* Center it */
             width: 20px;
             height: 20px;
-            background: #000;
-            border: 3px solid #fff;
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
             border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* The Center Cap */
+        .center-cap {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 11;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+            width: 24px;
+            height: 24px;
+            background: #000;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
-        /* --- Bottom Controls --- */
+        /* --- Controls --- */
         .controls {
             position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 50px;
             display: flex;
-            justify-content: center;
-            gap: 30px;
-            align-items: center;
+            gap: 20px;
             z-index: 100;
         }
 
         .control-btn {
-            background: rgba(255, 255, 255, 0.15);
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
             border: none;
             color: #fff;
             font-size: 24px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
         }
 
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
-        }
-
-        .play-icon::before { content: '▶'; }
-        .pause-icon::before { content: '⏸'; }
+        .control-btn:hover { transform: scale(1.05); background: rgba(255,255,255,0.2); }
 
         /* --- Modal --- */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
-
-        .modal.active {
-            display: flex;
-        }
-
+        .modal.active { display: flex; }
         .modal-content {
-            background: #1a1a1a;
-            border-radius: 16px;
+            background: #1f1f1f;
             padding: 30px;
-            max-width: 500px;
+            border-radius: 16px;
             width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
+            max-width: 400px;
+            border: 1px solid #333;
         }
+        .modal h2 { margin-bottom: 20px; font-weight: 500; }
+        .close-modal { float: right; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;}
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 500;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 32px;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.2s ease;
-        }
-
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .settings-section {
-            margin-bottom: 30px;
-        }
-
-        .settings-label {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 12px;
-            display: block;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .sound-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        .sound-option {
-            padding: 15px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .sound-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .sound-option.selected {
-            background: rgba(255, 107, 90, 0.2);
-            border-color: #ff6b5a;
-        }
-
-        .sound-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .sound-name {
-            font-size: 13px;
-        }
-
-        .id-input {
+        input[type="text"] {
             width: 100%;
             padding: 12px;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            background: #333;
+            border: 1px solid #444;
             color: #fff;
-            font-family: monospace;
+            border-radius: 8px;
             margin-bottom: 10px;
         }
 
-        .id-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .user-id-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 12px;
-            margin-top: 15px;
-        }
-
-        .copy-btn {
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: #444;
+            color: #fff;
             border: none;
             border-radius: 8px;
-            color: #fff;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 12px;
-            flex-grow: 1;
+            margin-top: 10px;
         }
-
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        .modal-btn:hover { background: #555; }
 
         /* Responsive */
         @media (max-width: 480px) {
-            .container {
-                padding-top: 80px;
-                padding-bottom: 100px;
-            }
-
-            .timer-wheel {
-                width: 340px;
-                height: 340px;
-            }
-
-            .pie {
-                --size: 340;
+            .timer-container {
+                width: 300px;
+                height: 300px;
             }
 
             .tick {
-                transform-origin: 50% 170px;
-            }
-
-            .wheel-pointer {
-                width: 10px;
-                height: 144px;
-                border-radius: 5px 5px 0 0;
-                left: calc(50% - 5px); /* Center the 10px pointer (half of width) */
-                transform-origin: 5px 100%; /* Rotate around center bottom (5px = half width, 100% = bottom) */
-            }
-
-            .pointer-tip {
-                width: 24px;
-                height: 24px;
-                top: -9px;
-            }
-
-            .wheel-center {
-                width: 18px;
-                height: 18px;
+                transform-origin: 50% 150px;
             }
 
             .time-display {
-                font-size: 28px;
-            }
-
-            .minute-number {
-                font-size: 18px;
-            }
-
-            .timer-title {
-                font-size: 22px;
-                margin-bottom: 15px;
+                font-size: 32px;
             }
 
             .top-bar {
                 padding: 15px 20px;
             }
         }
+
     </style>
 </head>
 <body>
 
     <div class="top-bar">
         <div class="time-display" id="timeDisplay">25:00</div>
-        <div class="top-icons">
-            <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
-        </div>
+        <button class="icon-btn" id="settingsBtn">⚙</button>
     </div>
 
-    <div class="container">
-        <h1 class="timer-title" id="timerTitle"></h1>
-        <div class="timer-wheel">
-            <div class="pie" id="clockPie">
-                <div class="pie__segment" id="pieSegment" style="--value: 0; --over50: 0"></div>
-            </div>
-            <div class="tick-marks" id="tickMarks"></div>
-            <div class="minute-numbers" id="minuteNumbers"></div>
-            <div class="wheel-pointer" id="wheelPointer">
+    <div class="timer-container">
+        <div class="dial-colors"></div>
+
+        <div class="dial-mask" id="dialMask"></div>
+
+        <div class="dial-overlay" id="dialOverlay"></div>
+
+        <div class="pointer-container" id="pointerContainer">
+            <div class="pointer-hand">
                 <div class="pointer-tip"></div>
             </div>
-            <div class="wheel-center"></div>
         </div>
+
+        <div class="center-cap"></div>
     </div>
 
     <div class="controls">
-        <button class="control-btn play" id="playPauseBtn" title="Play/Pause">
-            <span class="play-icon"></span>
-        </button>
+        <button class="control-btn" id="playPauseBtn">▶</button>
     </div>
 
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Settings</h2>
-                <button class="close-btn" id="closeModal">×</button>
-            </div>
-
-            <div class="settings-section">
-                <label class="settings-label">Alert Sound</label>
-                <div class="sound-options" id="soundOptions"></div>
-                <button class="copy-btn" id="testSoundBtn" style="width: 100%; margin-top: 10px;">Test Sound</button>
-            </div>
-
-            <div class="settings-section">
-                <label class="settings-label">Sync ID</label>
-                <p style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">
-                    Enter an ID to sync. Use the same ID on other devices.
-                </p>
-                <input type="text" class="id-input" id="userIdInput" placeholder="Enter sync ID...">
-                <div class="id-buttons">
-                    <button class="copy-btn" id="syncIdBtn">Sync to this ID</button>
-                    <button class="copy-btn" id="copyIdBtn">Copy Current ID</button>
-                </div>
-                <div class="user-id-box">
-                    <strong>Current ID:</strong> <span id="userIdDisplay">Loading...</span>
-                </div>
-            </div>
+            <button class="close-modal" id="closeModal">×</button>
+            <h2>Settings</h2>
+            <p style="margin-bottom: 10px; opacity: 0.7; font-size: 14px;">Sync ID</p>
+            <input type="text" id="syncIdInput" placeholder="Enter Sync ID">
+            <button class="modal-btn" id="copyIdBtn">Copy My ID</button>
+            <button class="modal-btn" id="loadIdBtn" style="background: #50C8C6; color: #000;">Load ID</button>
         </div>
     </div>
 
     <script type="module">
-        // Firebase configuration
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
+        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyBGQrPw8ZXeViYKILlHl8YPNvKeyWW2Zxc",
             authDomain: "pomodoro-9ea16.firebaseapp.com",
@@ -569,367 +341,167 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // Timer state
-        const TOTAL_DURATION = 25 * 60; // Fixed 25 minutes
-        let timeRemaining = TOTAL_DURATION;
+        // --- State ---
+        const TOTAL_TIME = 25 * 60; // 25 minutes standard
+        const MAX_DIAL_MINUTES = 60; // The dial represents 60 minutes
+        let timeLeft = TOTAL_TIME;
         let isRunning = false;
         let timerInterval = null;
-        let userId = localStorage.getItem('userId') || generateUserId();
-        let selectedSound = localStorage.getItem('selectedSound') || 'bell';
+        let userId = localStorage.getItem('userId') || 'user_' + Math.random().toString(36).substr(2, 9);
+        let sessionId = 'sess_' + Date.now();
 
-        // Generate unique session ID to distinguish this browser tab from others
-        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        // --- UI Init ---
+        function drawDial() {
+            const overlay = document.getElementById('dialOverlay');
+            const radius = 180; // Half of container size
 
-        localStorage.setItem('userId', userId);
-
-        // Parse URL parameters
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                title: params.get('title') || '',
-                action: params.get('action') || '', // 'start' or 'reset'
-            };
-        }
-
-        const urlParams = getUrlParams();
-
-        // Color scheme for 5-minute segments
-        const colors = [
-            '#FF6B9D', // Pink (25-21)
-            '#FF5757', // Red (20-16)
-            '#FFD93D', // Yellow (15-11)
-            '#6BCB77', // Green (10-6)
-            '#4D96FF'  // Blue (5-0)
-        ];
-
-        // Sound options
-        const sounds = {
-            bell: { icon: '🔔', name: 'Bell', url: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
-            chime: { icon: '🎵', name: 'Chime', url: 'https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3' },
-            ding: { icon: '🔊', name: 'Ding', url: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3' }
-        };
-
-        function generateUserId() {
-            return 'user_' + Math.random().toString(36).substring(2, 15);
-        }
-
-        // Initialize UI
-        function init() {
-            createTickMarks();
-            createMinuteNumbers();
-            updateDisplay();
-            setupSoundOptions();
-            document.getElementById('userIdDisplay').textContent = userId;
-            document.getElementById('userIdInput').value = userId;
-
-            // Set title from URL parameter
-            if (urlParams.title) {
-                document.getElementById('timerTitle').textContent = urlParams.title;
-            }
-
-            // Handle action from URL parameter
-            if (urlParams.action === 'start') {
-                startTimer();
-            } else if (urlParams.action === 'reset') {
-                resetTimer();
-            }
-
-            // Sync with Firebase
-            syncWithFirebase();
-        }
-
-        function createTickMarks() {
-            const container = document.getElementById('tickMarks');
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick major' : 'tick';
                 tick.style.transform = `rotate(${i * 6}deg)`;
-                container.appendChild(tick);
+                overlay.appendChild(tick);
+
+                // Add numbers for every 5 minutes
+                if (i % 5 === 0) {
+                    const num = document.createElement('div');
+                    num.className = 'minute-num';
+                    // Display "60'" at the top (0 index), otherwise the number
+                    const text = i === 0 ? "60'" : i;
+                    num.innerText = text;
+
+                    // Calculate position for number
+                    // Angle needs offset because 0 is at top (which is -90deg in trig)
+                    const angleRad = (i * 6 - 90) * (Math.PI / 180);
+                    const numRadius = 145; // Distance from center
+
+                    num.style.left = (50 + (numRadius/radius)*50 * Math.cos(angleRad)) + '%';
+                    num.style.top = (50 + (numRadius/radius)*50 * Math.sin(angleRad)) + '%';
+
+                    overlay.appendChild(num);
+                }
             }
         }
 
-        function createMinuteNumbers() {
-            const container = document.getElementById('minuteNumbers');
-
-            // Use percentage-based positioning to work on all screen sizes
-            // Center is at 50%, radius is 41.25% of container (165/400 = 0.4125)
-            const radiusPercent = 41.25;
-            const centerPercent = 50;
-
-            // Show minute markers at 5, 10, 15, 20, 25 (not 0)
-            for (let i = 5; i <= 25; i += 5) {
-                const angle = (i / 25) * 360 - 90;
-                const rad = angle * Math.PI / 180;
-                const x = centerPercent + radiusPercent * Math.cos(rad);
-                const y = centerPercent + radiusPercent * Math.sin(rad);
-
-                const number = document.createElement('div');
-                number.className = 'minute-number';
-                number.textContent = i;
-                number.style.left = `${x}%`;
-                number.style.top = `${y}%`;
-                container.appendChild(number);
-            }
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
         }
 
-        function updateDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            document.getElementById('timeDisplay').textContent =
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        function updateVisuals() {
+            document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
 
-            // Update pointer rotation (starts at top, goes clockwise)
-            const progress = (TOTAL_DURATION - timeRemaining) / TOTAL_DURATION;
-            const rotation = progress * 360;
-            document.getElementById('wheelPointer').style.transform =
-                `rotate(${rotation}deg)`;
+            // Calculate angle based on 60 minute face
+            // 25 minutes = 150 degrees
+            const minutesRemaining = timeLeft / 60;
+            const degrees = minutesRemaining * 6; // 6 degrees per minute
 
-            // Update segment visibility
-            updateSegments();
-        }
+            // Update Mask and Pointer
+            const dialMask = document.getElementById('dialMask');
+            const pointerContainer = document.getElementById('pointerContainer');
 
-        function updateSegments() {
-            // Calculate percentage of time elapsed
-            const percentage = ((TOTAL_DURATION - timeRemaining) / TOTAL_DURATION) * 100;
-
-            // Update CSS variables for pie animation
-            const pieSegment = document.getElementById('pieSegment');
-            if (pieSegment) {
-                pieSegment.style.cssText = `--value: ${percentage}; --over50: ${percentage >= 50 ? 1 : 0}`;
-            }
+            dialMask.style.setProperty('--angle', `${degrees}deg`);
+            pointerContainer.style.setProperty('--angle', `${degrees}deg`);
         }
 
         function tick() {
-            if (timeRemaining > 0) {
-                timeRemaining--;
-                updateDisplay();
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateVisuals();
                 syncToFirebase();
-
-                if (timeRemaining === 0) {
-                    isRunning = false;
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    playSound();
-                    updatePlayButton();
-                    syncToFirebase(); // Sync the completed state
-                }
-            }
-        }
-
-        function toggleTimer() {
-            isRunning = !isRunning;
-
-            if (isRunning) {
-                timerInterval = setInterval(tick, 1000);
             } else {
-                clearInterval(timerInterval);
+                stopTimer();
+                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => console.log('Sound failed:', e));
             }
-
-            updatePlayButton();
-            syncToFirebase();
-        }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            timeRemaining = TOTAL_DURATION;
-            updateDisplay();
-            updatePlayButton();
-            syncToFirebase();
         }
 
         function startTimer() {
-            if (!isRunning) {
-                toggleTimer();
-            }
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('playPauseBtn').innerText = '⏸';
+            timerInterval = setInterval(tick, 1000);
+            syncToFirebase();
         }
 
-        function updatePlayButton() {
-            const btn = document.getElementById('playPauseBtn');
-            const icon = btn.querySelector('span');
-            icon.className = isRunning ? 'pause-icon' : 'play-icon';
+        function stopTimer() {
+            isRunning = false;
+            document.getElementById('playPauseBtn').innerText = '▶';
+            clearInterval(timerInterval);
+            syncToFirebase();
         }
 
-        function playSound() {
-            const audio = new Audio(sounds[selectedSound].url);
-            audio.play().catch(e => console.log('Sound play failed:', e));
+        function toggleTimer() {
+            isRunning ? stopTimer() : startTimer();
         }
 
-        function setupSoundOptions() {
-            const container = document.getElementById('soundOptions');
-            Object.entries(sounds).forEach(([key, sound]) => {
-                const option = document.createElement('div');
-                option.className = 'sound-option' + (key === selectedSound ? ' selected' : '');
-                option.innerHTML = `
-                    <div class="sound-icon">${sound.icon}</div>
-                    <div class="sound-name">${sound.name}</div>
-                `;
-                option.addEventListener('click', () => {
-                    selectedSound = key;
-                    localStorage.setItem('selectedSound', key);
-                    document.querySelectorAll('.sound-option').forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
-                });
-                container.appendChild(option);
-            });
-        }
-
-        // Firebase sync
-        let syncListener = null;
-        let lastSyncTime = 0;
-        let isSyncing = false;
-
+        // --- Firebase Sync ---
         function syncToFirebase() {
-            // Prevent sync loops
-            if (isSyncing) return;
-
-            const now = Date.now();
-            // Debounce syncs to max once per 500ms
-            if (now - lastSyncTime < 500) return;
-
-            lastSyncTime = now;
-
-            const timerRef = ref(database, `timers/${userId}`);
-            set(timerRef, {
-                timeRemaining,
+            set(ref(database, 'timers/' + userId), {
+                timeLeft,
                 isRunning,
-                lastUpdate: now,
-                sessionId: sessionId // Include session ID to identify source
-            }).catch(err => {
-                console.error('Firebase sync error:', err);
+                lastUpdate: Date.now(),
+                sessionId
             });
         }
 
-        async function syncWithFirebase() {
-            // Remove old listener if exists
-            if (syncListener) {
-                syncListener();
-                syncListener = null;
-            }
-
-            const timerRef = ref(database, `timers/${userId}`);
-
-            // First, load initial state
-            try {
-                const snapshot = await get(timerRef);
+        function initSync() {
+            onValue(ref(database, 'timers/' + userId), (snapshot) => {
                 const data = snapshot.val();
+                if (!data || data.sessionId === sessionId) return;
 
-                if (data) {
-                    console.log('Loaded initial state for user:', userId, data);
-
-                    // Apply the loaded state
-                    const timeDiff = Math.floor((Date.now() - data.lastUpdate) / 1000);
-
-                    if (data.isRunning) {
-                        timeRemaining = Math.max(0, data.timeRemaining - timeDiff);
-
-                        if (timeRemaining > 0) {
-                            isRunning = true;
-                            clearInterval(timerInterval);
-                            timerInterval = setInterval(tick, 1000);
-                        } else {
-                            isRunning = false;
-                            timeRemaining = 0;
-                        }
-                    } else {
-                        timeRemaining = data.timeRemaining;
-                        isRunning = false;
-                        clearInterval(timerInterval);
-                    }
-
-                    updateDisplay();
-                    updatePlayButton();
-                } else {
-                    console.log('No previous state found for user:', userId);
-                    // Save current state as initial state
-                    await syncToFirebase();
-                }
-            } catch (error) {
-                console.error('Error loading initial state:', error);
-            }
-
-            // Set up real-time listener
-            syncListener = onValue(timerRef, (snapshot) => {
-                const data = snapshot.val();
-
-                // Skip if no data
-                if (!data || !data.lastUpdate) return;
-
-                // Prevent sync loops - ignore updates from our own session
-                if (data.sessionId === sessionId) return;
-
-                console.log('Received update from another device:', data);
-
-                isSyncing = true;
-
-                const timeDiff = Math.floor((Date.now() - data.lastUpdate) / 1000);
+                // If data comes from another session
+                const elapsed = Math.floor((Date.now() - data.lastUpdate) / 1000);
+                let syncedTime = data.timeLeft;
 
                 if (data.isRunning) {
-                    timeRemaining = Math.max(0, data.timeRemaining - timeDiff);
-
-                    if (!isRunning) {
-                        isRunning = true;
-                        timerInterval = setInterval(tick, 1000);
-                        updatePlayButton();
-                    }
+                    syncedTime = Math.max(0, syncedTime - elapsed);
+                    if (!isRunning) startTimer();
                 } else {
-                    timeRemaining = data.timeRemaining;
-                    if (isRunning) {
-                        isRunning = false;
-                        clearInterval(timerInterval);
-                        updatePlayButton();
-                    }
+                    if (isRunning) stopTimer();
                 }
 
-                updateDisplay();
-
-                setTimeout(() => {
-                    isSyncing = false;
-                }, 100);
-            }, (error) => {
-                console.error('Firebase listener error:', error);
+                // Only update if difference is significant (>1s) to prevent jitter
+                if (Math.abs(timeLeft - syncedTime) > 1) {
+                    timeLeft = syncedTime;
+                    updateVisuals();
+                }
             });
         }
 
-        // Event listeners
+        // --- Event Listeners ---
         document.getElementById('playPauseBtn').addEventListener('click', toggleTimer);
+
+        // Settings Modal
+        const modal = document.getElementById('settingsModal');
         document.getElementById('settingsBtn').addEventListener('click', () => {
-            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('syncIdInput').value = userId;
+            modal.classList.add('active');
         });
-        document.getElementById('closeModal').addEventListener('click', () => {
-            document.getElementById('settingsModal').classList.remove('active');
-        });
-        document.getElementById('testSoundBtn').addEventListener('click', playSound);
-
-        document.getElementById('syncIdBtn').addEventListener('click', async () => {
-            const newId = document.getElementById('userIdInput').value.trim();
-            if (newId) {
-                // Stop current timer if running
-                if (isRunning) {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    updatePlayButton();
-                }
-
-                // Update user ID
-                userId = newId;
-                localStorage.setItem('userId', userId);
-                document.getElementById('userIdDisplay').textContent = userId;
-
-                // Re-initialize Firebase sync with new ID and load their state
-                await syncWithFirebase();
-
-                alert('Synced to ID: ' + userId + '\nTimer state loaded from Firebase.');
-            }
-        });
+        document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('active'));
 
         document.getElementById('copyIdBtn').addEventListener('click', () => {
             navigator.clipboard.writeText(userId);
-            alert('ID copied to clipboard!');
+            alert('ID Copied!');
         });
 
-        // Initialize
-        init();
+        document.getElementById('loadIdBtn').addEventListener('click', () => {
+            const newId = document.getElementById('syncIdInput').value.trim();
+            if (newId) {
+                userId = newId;
+                localStorage.setItem('userId', userId);
+                // Reset listener for new ID
+                initSync();
+                alert('Synced to new ID!');
+                modal.classList.remove('active');
+            }
+        });
+
+        // --- Init ---
+        drawDial();
+        updateVisuals();
+        initSync();
+        localStorage.setItem('userId', userId);
+
     </script>
 </body>
 </html>
