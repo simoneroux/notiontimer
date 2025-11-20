@@ -203,21 +203,15 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBGQrPw8ZXeViYKILlHl8YPNvKeyWW2Zxc",
-            authDomain: "pomodoro-9ea16.firebaseapp.com",
-            databaseURL: "https://pomodoro-9ea16-default-rtdb.firebaseio.com",
-            projectId: "pomodoro-9ea16",
-            storageBucket: "pomodoro-9ea16.firebasestorage.app",
-            messagingSenderId: "637893906536",
-            appId: "1:637893906536:web:71c2bcf3c10b15b73dc2ec"
-        };
+        const SUPABASE_URL = 'https://oqdaxvlotnkdrqbrpvhp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xZGF4dmxvdG5rZHJxYnJwdmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIwNjA2MDAsImV4cCI6MjA0NzYzNjYwMH0.N7lMj7C7gpMzBP8ydbqvJIiOp5YZMafVDcMXGRxWO-0';
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        let supabase = null;
+        try {
+            supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch(e) { console.error("Supabase Init Error", e); }
 
         // --- VARIABLES ---
         let timeLeft = 25 * 60; // Seconds remaining (calculated locally)
@@ -341,7 +335,7 @@
         function handleEnd() {
             if (isDragging) {
                 isDragging = false;
-                pushStateToFirebase(); // Sync the new time
+                syncToSupabase(); // Sync the new time
             }
         }
 
@@ -396,7 +390,7 @@
             tick();
 
             // Sync
-            pushStateToFirebase();
+            syncToSupabase();
         }
 
         function stopTimer() {
@@ -407,7 +401,7 @@
             document.body.classList.remove('is-running');
             playIconPath.setAttribute('d', 'M8 5v14l11-7z'); // Play Icon
 
-            pushStateToFirebase();
+            syncToSupabase();
         }
 
         function toggleTimer() {
@@ -416,59 +410,88 @@
 
         playBtn.addEventListener('click', toggleTimer);
 
-        // --- FIREBASE SYNC (SOLID TIMESTAMP APPROACH) ---
+        // --- SUPABASE SYNC (TIMESTAMP APPROACH) ---
 
-        // 1. WRITE to Firebase
-        function pushStateToFirebase() {
-            set(ref(database, 'timers/' + userId), {
-                isRunning: isRunning,
-                endTime: isRunning ? endTime : null, // Only save EndTime if running
-                pausedRemaining: isRunning ? null : timeLeft, // If paused, save the static number
-                timestamp: Date.now() // For debugging lag
-            }).catch(err => console.error("Sync Write Error:", err));
+        // 1. WRITE to Supabase
+        async function syncToSupabase() {
+            if(!supabase) return;
+            const payload = {
+                id: userId,
+                end_time: isRunning ? endTime : null,
+                is_running: isRunning,
+                paused_remaining: isRunning ? null : timeLeft,
+                updated_at: Date.now()
+            };
+            try {
+                await supabase.from('timers').upsert(payload);
+            } catch(err) {
+                console.error("Sync Write Error:", err);
+            }
         }
 
-        // 2. READ from Firebase
+        // 2. READ from Supabase
         function initSync() {
-            onValue(ref(database, 'timers/' + userId), (snap) => {
-                const data = snap.val();
-                if (!data) return;
+            if(!supabase) return;
 
-                // Determine if we should be running based on Server Data
-                const serverIsRunning = data.isRunning;
+            // 1. Listen for changes
+            supabase.channel('any')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'timers',
+                    filter: `id=eq.${userId}`
+                }, payload => {
+                    const data = payload.new;
+                    if (data.updated_at > (Date.now() - 2000)) return; // Ignore recent self-updates
 
-                if (serverIsRunning) {
-                    // Server says we are running. Calculate remaining based on EndTime.
-                    const now = Date.now();
-                    const secondsLeft = Math.ceil((data.endTime - now) / 1000);
-
-                    if (secondsLeft > 0) {
-                        endTime = data.endTime;
-                        timeLeft = secondsLeft;
-
-                        // If we aren't running locally, start up
-                        if (!isRunning) {
-                            isRunning = true;
-                            document.body.classList.add('is-running');
-                            playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                            tick();
+                    if (data.is_running) {
+                        const now = Date.now();
+                        const secondsLeft = Math.ceil((data.end_time - now) / 1000);
+                        if (secondsLeft > 0) {
+                            endTime = data.end_time;
+                            timeLeft = secondsLeft;
+                            if (!isRunning) {
+                                isRunning = true;
+                                document.body.classList.add('is-running');
+                                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+                                tick();
+                            }
+                        } else {
+                            timeLeft = 0;
+                            if(isRunning) stopTimer();
                         }
                     } else {
-                        // Timer finished while we were away
-                        timeLeft = 0;
                         if (isRunning) stopTimer();
+                        if (!isDragging && Math.abs(timeLeft - data.paused_remaining) > 1) {
+                            timeLeft = data.paused_remaining || (25*60);
+                        }
                     }
-                } else {
-                    // Server says paused.
-                    if (isRunning) stopTimer();
+                    updateVisuals();
+                })
+                .subscribe();
 
-                    // Update local time to match server's paused time
-                    // (Only if significant difference to prevent jitter while dragging)
-                    if (!isDragging && Math.abs(timeLeft - data.pausedRemaining) > 1) {
-                        timeLeft = data.pausedRemaining || (25*60);
-                    }
+            // 2. Get initial state
+            supabase.from('timers').select('*').eq('id', userId).single().then(({ data }) => {
+                if(data) {
+                   if (data.is_running) {
+                        const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
+                        if (secondsLeft > 0) {
+                            endTime = data.end_time;
+                            timeLeft = secondsLeft;
+                            if (!isRunning) {
+                                isRunning=true;
+                                document.body.classList.add('is-running');
+                                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+                                tick();
+                            }
+                        } else {
+                            timeLeft = 0;
+                        }
+                   } else {
+                       timeLeft = data.paused_remaining || (25*60);
+                   }
+                   updateVisuals();
                 }
-                updateVisuals();
             });
         }
 
