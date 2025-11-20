@@ -3,23 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomodoro Focus</title>
+    <title>Focus Timer</title>
     <style>
+        :root {
+            --bg-color: #262626;
+            --text-color: #e0e0e0;
+            --icon-color: #666666;
+            --icon-hover: #aaaaaa;
+            --tick-color: rgba(255, 255, 255, 0.25);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #2a2a2a; /* Dark Grey Background */
-            color: #fff;
+            background: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            height: 100vh;
             overflow: hidden;
         }
 
@@ -29,54 +39,48 @@
             top: 0;
             left: 0;
             width: 100%;
+            height: 60px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 20px 30px;
+            justify-content: center; /* Center the title */
+            padding: 0 30px;
             z-index: 100;
         }
 
-        .window-controls {
+        /* Title */
+        .app-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ddd;
             display: flex;
-            gap: 8px;
-        }
-
-        .traffic-light {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .traffic-light.close { background: #FF5F57; }
-        .traffic-light.minimize { background: #FFBD2E; }
-        .traffic-light.expand { background: #28C840; }
-
-        .time-display {
-            font-size: 42px;
-            font-weight: 300;
-            color: #fff;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .icon-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #fff;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
+            gap: 10px;
             align-items: center;
-            justify-content: center;
-            transition: background 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+        .time-text { font-variant-numeric: tabular-nums; }
+        .task-name { color: #999; font-weight: 400; }
+
+        /* Settings Icon (Absolute Right) */
+        .settings-container {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
-        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .svg-icon {
+            width: 18px;
+            height: 18px;
+            fill: var(--icon-color);
+            cursor: pointer;
+            transition: fill 0.2s ease, transform 0.5s ease;
+        }
+        .svg-icon:hover {
+            fill: var(--icon-hover);
+            transform: rotate(90deg);
+        }
 
-        /* --- Timer Container --- */
+        /* --- Timer Wheel --- */
         .timer-container {
             position: relative;
             width: 360px;
@@ -84,185 +88,171 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: grab;
+            /* Slight offset to account for header visually */
+            margin-top: 10px;
         }
 
-        /* 1. The Colorful Background (Static) - CCW Layout */
+        .timer-container:active { cursor: grabbing; }
+        body.is-running .timer-container { cursor: default; }
+
+        /* Background Colors (Counter-Clockwise Layout) */
         .dial-colors {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* Counter-clockwise color bands for 60-minute dial */
+            /* 0-5 min (Red) = 330-360deg
+               5-10 min (Orange) = 300-330deg
+               ...etc
+            */
             background: conic-gradient(
-                #9059FF 0deg 120deg,    /* Purple (40-60m) */
-                #0088FF 120deg 210deg,  /* Blue (25-40m) */
-                #50C8C6 210deg 270deg,  /* Teal (15-25m) */
-                #FFCD00 270deg 300deg,  /* Yellow (10-15m) */
-                #FF9F00 300deg 330deg,  /* Orange (5-10m) */
-                #FF4C4C 330deg 360deg   /* Red (0-5m) */
+                #9059FF 0deg 120deg,    /* Purple */
+                #0088FF 120deg 210deg,  /* Blue */
+                #50C8C6 210deg 270deg,  /* Teal */
+                #FFCD00 270deg 300deg,  /* Yellow */
+                #FF9F00 300deg 330deg,  /* Orange */
+                #FF4C4C 330deg 360deg   /* Red */
             );
         }
 
-        /* 2. The Mask (Rotates to hide colors) - CCW Layout */
-        /* We use a dynamic conic gradient that starts transparent and goes dark */
+        /* Mask */
         .dial-mask {
             position: absolute;
-            width: 101%; /* Slight overlap to prevent bleed */
-            height: 101%;
+            width: 100.5%;
+            height: 100.5%;
             border-radius: 50%;
-            /* Variable controlled by JS - CCW layout */
+            /* This mask rotates to reveal/hide the colors underneath */
             background: conic-gradient(
                 transparent 0deg,
-                transparent var(--angle, 360deg),
-                #2a2a2a var(--angle, 360deg),
-                #2a2a2a 360deg
+                transparent var(--angle, 0deg),
+                var(--bg-color) var(--angle, 0deg),
+                var(--bg-color) 360deg
             );
             z-index: 2;
         }
 
-        /* 3. Tick Marks & Numbers */
+        /* Ticks and Numbers */
         .dial-overlay {
             position: absolute;
             width: 100%;
             height: 100%;
-            z-index: 3;
+            z-index: 4;
             pointer-events: none;
         }
 
         .tick {
             position: absolute;
-            background: rgba(255, 255, 255, 0.4);
+            background: var(--tick-color);
             width: 2px;
-            height: 10px;
+            height: 12px;
             left: 50%;
             top: 0;
-            transform-origin: 50% 180px; /* Half of container width */
+            transform-origin: 50% 180px; /* Radius */
         }
-
         .tick.major {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.5);
             width: 3px;
-            height: 18px;
+            height: 20px;
         }
 
-        .minute-num {
+        .number {
             position: absolute;
             font-size: 18px;
             font-weight: 600;
-            color: rgba(255,255,255, 0.6);
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
             transform: translate(-50%, -50%);
             width: 40px;
             text-align: center;
         }
 
-        /* 4. The Pointer */
+        /* Pointer */
         .pointer-container {
             position: absolute;
             width: 100%;
             height: 100%;
             z-index: 10;
-            transform: rotate(var(--angle, 150deg));
-            transition: transform 1s linear;
+            transform: rotate(var(--angle, 0deg));
+            transition: transform 0.1s linear;
             pointer-events: none;
         }
 
-        .pointer-hand {
+        .pointer-arm {
             position: absolute;
-            left: 50%;
+            left: calc(50% - 7px);
             bottom: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            /* CSS Triangle for the wedge shape */
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 140px solid #fff;
-            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+            width: 14px;
+            height: 165px;
+            background: #fff;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transform-origin: bottom center;
         }
 
-        /* The white ball at the tip */
-        .pointer-tip {
-            position: absolute;
-            top: -14px; /* Position relative to the bottom of the wedge (which is actually the top visually) */
-            left: -10px; /* Center it */
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* The Center Cap */
-        .center-cap {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 24px;
-            height: 24px;
-            background: #000;
-            border: 4px solid #fff;
-            border-radius: 50%;
-            z-index: 20;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        /* Draggable Knob */
+        /* The Knob */
         .drag-knob {
             position: absolute;
-            width: 32px;
-            height: 32px;
-            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            cursor: grab;
-            z-index: 15;
-            transition: opacity 0.3s ease, transform 0.05s ease;
-            top: 50%;
+            top: -10px;
             left: 50%;
-            margin-left: -16px;
-            margin-top: -16px;
-            transform-origin: 50% 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(to bottom, #ffffff, #dddddd);
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            z-index: 11;
             pointer-events: auto;
+            cursor: grab;
+            transition: opacity 0.3s ease, transform 0.2s;
         }
+        .drag-knob:hover { transform: translateX(-50%) scale(1.1); }
+        .drag-knob:active { cursor: grabbing; }
 
-        .drag-knob:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-        }
-
-        /* Hide knob when timer is running */
         body.is-running .drag-knob {
             opacity: 0;
             pointer-events: none;
         }
 
-        /* --- Controls --- */
+        /* Center Dot */
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            z-index: 12;
+        }
+
+        /* --- Bottom Controls --- */
         .controls {
             position: fixed;
-            bottom: 50px;
+            bottom: 60px;
             display: flex;
-            gap: 20px;
+            align-items: center;
+            gap: 50px;
             z-index: 100;
         }
 
         .control-btn {
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.1);
+            background: none;
             border: none;
-            color: #fff;
-            font-size: 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
 
-        .control-btn:hover { transform: scale(1.05); background: rgba(255,255,255,0.2); }
+        .control-icon { fill: #888; transition: fill 0.2s; }
+
+        .control-btn:hover { opacity: 1; }
+        .control-btn:hover .control-icon { fill: #fff; }
+
+        .control-btn.play .control-icon { width: 28px; height: 28px; fill: #bbb; }
+        .control-btn.play:hover .control-icon { fill: #fff; }
 
         /* --- Modal --- */
         .modal {
@@ -270,109 +260,97 @@
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
         .modal.active { display: flex; }
-        .modal-content {
-            background: #1f1f1f;
-            padding: 30px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid #333;
-        }
-        .modal h2 { margin-bottom: 20px; font-weight: 500; }
-        .close-modal { float: right; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;}
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
+        .modal-box {
             background: #333;
+            padding: 25px;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
             border: 1px solid #444;
-            color: #fff;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .modal-box h3 { color: #fff; margin-bottom: 15px; font-weight: 500; font-size: 18px;}
+        .modal-box input {
+            width: 100%; padding: 10px; margin: 10px 0 20px 0;
+            background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 14px;
+        }
+        .modal-box input:focus { outline: none; border-color: #666; }
+
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
 
         .modal-btn {
-            width: 100%;
-            padding: 12px;
-            background: #444;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
+            padding: 8px 16px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
         }
         .modal-btn:hover { background: #555; }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .timer-container {
-                width: 300px;
-                height: 300px;
-            }
-
-            .tick {
-                transform-origin: 50% 150px;
-            }
-
-            .time-display {
-                font-size: 32px;
-            }
-
-            .top-bar {
-                padding: 15px 20px;
-            }
-        }
+        .modal-btn.primary { background: #0088FF; }
+        .modal-btn.primary:hover { background: #0077EE; }
 
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="window-controls">
-            <div class="traffic-light close"></div>
-            <div class="traffic-light minimize"></div>
-            <div class="traffic-light expand"></div>
+        <div class="app-title">
+            <span class="time-text" id="headerTime">25:00</span>
+            <span style="color:#555">•</span>
+            <span class="task-name" id="taskNameDisplay">Pomodoro</span>
         </div>
-        <div class="time-display" id="timeDisplay">60:00</div>
-        <button class="icon-btn" id="settingsBtn">⚙</button>
+
+        <div class="settings-container">
+            <svg class="svg-icon" id="settingsBtn" viewBox="0 0 24 24">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+        </div>
     </div>
 
-    <div class="timer-container">
+    <div class="timer-container" id="timerContainer">
         <div class="dial-colors"></div>
-
         <div class="dial-mask" id="dialMask"></div>
-
         <div class="dial-overlay" id="dialOverlay"></div>
 
         <div class="pointer-container" id="pointerContainer">
-            <div class="pointer-hand">
-                <div class="pointer-tip"></div>
+            <div class="pointer-arm">
+                <div class="drag-knob"></div>
             </div>
         </div>
 
-        <div class="center-cap"></div>
-
-        <div class="drag-knob" id="dragKnob"></div>
+        <div class="center-dot"></div>
     </div>
 
     <div class="controls">
-        <button class="control-btn" id="playPauseBtn">▶</button>
+        <button class="control-btn">
+            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24">
+                <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+            </svg>
+        </button>
+
+        <button class="control-btn play" id="playPauseBtn">
+            <svg class="control-icon" id="playIcon" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+        </button>
+
+        <button class="control-btn">
+            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24">
+                <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
+            </svg>
+        </button>
     </div>
 
     <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <button class="close-modal" id="closeModal">×</button>
-            <h2>Settings</h2>
-            <p style="margin-bottom: 10px; opacity: 0.7; font-size: 14px;">Sync ID</p>
-            <input type="text" id="syncIdInput" placeholder="Enter Sync ID">
-            <button class="modal-btn" id="copyIdBtn">Copy My ID</button>
-            <button class="modal-btn" id="loadIdBtn" style="background: #50C8C6; color: #000;">Load ID</button>
+        <div class="modal-box">
+            <h3>Sync Timer</h3>
+            <input type="text" id="syncIdInput" placeholder="Enter Session ID">
+            <div class="modal-actions">
+                <button class="modal-btn" id="copyIdBtn">Copy ID</button>
+                <button class="modal-btn primary" id="loadIdBtn">Join</button>
+                <button class="modal-btn" id="closeModal">Close</button>
+            </div>
         </div>
     </div>
 
@@ -380,7 +358,6 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyBGQrPw8ZXeViYKILlHl8YPNvKeyWW2Zxc",
             authDomain: "pomodoro-9ea16.firebaseapp.com",
@@ -394,45 +371,54 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // --- State ---
-        const TOTAL_TIME = 60 * 60; // 60 minutes for full dial
-        const MAX_DIAL_MINUTES = 60; // The dial represents 60 minutes
-        let timeLeft = TOTAL_TIME;
+        // State
+        let timeLeft = 25 * 60;
         let isRunning = false;
-        let timerInterval = null;
-        let userId = localStorage.getItem('userId') || 'user_' + Math.random().toString(36).substr(2, 9);
-        let sessionId = 'sess_' + Date.now();
         let isDragging = false;
+        let timerInterval = null;
+        let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 6);
+        let sessionId = 's_' + Date.now();
 
-        // --- UI Init ---
+        // Parse URL Param for Task Name
+        const params = new URLSearchParams(window.location.search);
+        const taskName = params.get('name') || 'Pomodoro';
+        document.getElementById('taskNameDisplay').innerText = taskName;
+        document.title = taskName + " Focus";
+
+        // DOM
+        const container = document.getElementById('timerContainer');
+        const headerTime = document.getElementById('headerTime');
+        const playBtn = document.getElementById('playPauseBtn');
+        const playIconPath = document.querySelector('#playIcon path');
+
+        // Draw Dial (Counter-Clockwise Logic)
         function drawDial() {
             const overlay = document.getElementById('dialOverlay');
-            const radius = 180; // Half of container size
+            const radius = 180;
 
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick major' : 'tick';
-                tick.style.transform = `rotate(${i * 6}deg)`;
+                // Rotate negative for CCW tick alignment
+                tick.style.transform = `rotate(-${i * 6}deg)`;
                 overlay.appendChild(tick);
 
-                // Add numbers for every 5 minutes - CCW layout
                 if (i % 5 === 0) {
                     const num = document.createElement('div');
-                    num.className = 'minute-num';
-                    // Display numbers counter-clockwise: 60, 55, 50... 5 (top to CCW)
-                    const minutes = 60 - i;
-                    const text = minutes === 60 ? "60'" : minutes;
-                    num.innerText = text;
+                    num.className = 'number';
+                    num.innerText = i === 0 ? "60'" : i;
 
-                    // Calculate position for number - CCW layout
-                    // Start at top (-90deg) and go counter-clockwise
-                    const angleDeg = -90 + (i * 6);
+                    // CCW Positioning
+                    // 0 is Top (-90deg). Moving CCW is subtracting angle.
+                    const angleDeg = -90 - (i * 6);
                     const angleRad = angleDeg * (Math.PI / 180);
-                    const numRadius = 145; // Distance from center
+                    const dist = 150;
 
-                    num.style.left = (50 + (numRadius/radius)*50 * Math.cos(angleRad)) + '%';
-                    num.style.top = (50 + (numRadius/radius)*50 * Math.sin(angleRad)) + '%';
+                    const x = 50 + (dist/radius * 50) * Math.cos(angleRad);
+                    const y = 50 + (dist/radius * 50) * Math.sin(angleRad);
 
+                    num.style.left = x + '%';
+                    num.style.top = y + '%';
                     overlay.appendChild(num);
                 }
             }
@@ -445,37 +431,36 @@
         }
 
         function updateVisuals() {
-            document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
+            headerTime.innerText = formatTime(timeLeft);
 
-            // Calculate angle based on 60 minute face - CCW layout
-            const minutesRemaining = timeLeft / 60;
-            const degrees = minutesRemaining * 6; // 6 degrees per minute
+            // Time to Angle Logic (CCW)
+            // 0 mins = 0 deg (Top/12 o'clock)
+            // 15 mins = 90 deg Left (9 o'clock) -> which is 270 deg Clockwise from Top
+            // Formula to get CW degrees from top: (360 - (mins * 6)) % 360
 
-            // Update Mask and Pointer
-            const dialMask = document.getElementById('dialMask');
-            const pointerContainer = document.getElementById('pointerContainer');
+            const minutes = timeLeft / 60;
+            const cwDegrees = (360 - (minutes * 6)) % 360;
 
-            dialMask.style.setProperty('--angle', `${degrees}deg`);
-            pointerContainer.style.setProperty('--angle', `${degrees}deg`);
+            const pointer = document.getElementById('pointerContainer');
+            pointer.style.setProperty('--angle', `${cwDegrees}deg`);
 
-            // Update knob position
-            updateKnobPosition(degrees);
+            // Update Mask
+            // Reveal colors from 0 (Top) CCW to current angle.
+            // In CSS gradients, angles go CW.
+            // We want to see colors between `cwDegrees` and `360`.
+            // So we make 0 -> cwDegrees Transparent (hiding the unused colors).
+
+            const mask = document.getElementById('dialMask');
+            mask.style.background = `conic-gradient(
+                var(--bg-color) 0deg,
+                var(--bg-color) ${cwDegrees}deg,
+                transparent ${cwDegrees}deg,
+                transparent 360deg
+            )`;
         }
 
-        function updateKnobPosition(degrees) {
-            const knob = document.getElementById('dragKnob');
-            const radius = 140; // Distance from center
-            const angleRad = (degrees - 90) * (Math.PI / 180); // -90 to start at top
-
-            const x = radius * Math.cos(angleRad);
-            const y = radius * Math.sin(angleRad);
-
-            knob.style.transform = `translate(${x}px, ${y}px)`;
-        }
-
-        // --- Drag Handlers ---
+        // Interaction
         function getMinutesFromEvent(e) {
-            const container = document.getElementById('pointerContainer').parentElement;
             const rect = container.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
@@ -483,160 +468,152 @@
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+            // Calculate Angle (Standard Trig: 0 at 3 o'clock)
             const x = clientX - centerX;
             const y = clientY - centerY;
+            let angleDeg = Math.atan2(y, x) * (180 / Math.PI);
 
-            // Calculate angle in radians and convert to degrees
-            let angleRad = Math.atan2(y, x);
-            let angleDeg = angleRad * (180 / Math.PI);
-
-            // Convert to clockwise angle starting from top (0 degrees at top)
+            // Convert to "Degrees from 12 o'clock CW"
             let cwAngle = angleDeg + 90;
             if (cwAngle < 0) cwAngle += 360;
 
-            // Convert CW angle to CCW minutes
+            // Convert CW Angle to CCW Minutes
+            // 0 deg CW = 0 min
+            // 90 deg CW = 45 min (Because 90deg CW is 3 o'clock. In CCW layout, 3 o'clock is 45min)
+            // Wait.
+            // 12 o'clock (0 deg) = 0 min
+            // 9 o'clock (270 deg CW) = 15 min
+            // 6 o'clock (180 deg CW) = 30 min
+            // 3 o'clock (90 deg CW) = 45 min
+
+            // Formula: minutes = (360 - cwAngle) / 6
             let minutes = (360 - cwAngle) / 6;
-            if (minutes >= 60) minutes = 0;
+
+            // Handle edge case near 0/60
+            if (minutes >= 59.5) minutes = 0;
 
             return Math.max(0, Math.min(60, Math.round(minutes)));
         }
 
         function handleStart(e) {
             if (isRunning) return;
-            e.preventDefault();
             isDragging = true;
-            const m = getMinutesFromEvent(e);
+            let m = getMinutesFromEvent(e);
+            if(m === 0) m = 60; // Snap to 60 if clicking top
             timeLeft = m * 60;
-            if (timeLeft === 0) timeLeft = 60 * 60; // If at 0, set to 60 minutes
             updateVisuals();
-            syncToFirebase();
+            sync();
         }
 
         function handleMove(e) {
-            if (!isDragging || isRunning) return;
+            if (!isDragging) return;
             e.preventDefault();
-            const m = getMinutesFromEvent(e);
+            let m = getMinutesFromEvent(e);
+            if(m === 0) m = 60;
             timeLeft = m * 60;
-            if (timeLeft === 0) timeLeft = 60 * 60;
             updateVisuals();
         }
 
-        function handleEnd(e) {
+        function handleEnd() {
             if (isDragging) {
-                e.preventDefault();
                 isDragging = false;
-                syncToFirebase();
+                sync();
             }
         }
 
-        function tick() {
-            if (timeLeft > 0) {
-                timeLeft--;
-                updateVisuals();
-                syncToFirebase();
-            } else {
-                stopTimer();
-                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e => console.log('Sound failed:', e));
-            }
-        }
+        container.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        container.addEventListener('touchstart', handleStart);
+        window.addEventListener('touchmove', handleMove);
+        window.addEventListener('touchend', handleEnd);
 
-        function startTimer() {
-            if (isRunning) return;
-            isRunning = true;
-            document.body.classList.add('is-running');
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            timerInterval = setInterval(tick, 1000);
-            syncToFirebase();
-        }
-
-        function stopTimer() {
-            isRunning = false;
-            document.body.classList.remove('is-running');
-            document.getElementById('playPauseBtn').innerText = '▶';
-            clearInterval(timerInterval);
-            syncToFirebase();
-        }
-
+        // Timer Control
         function toggleTimer() {
-            isRunning ? stopTimer() : startTimer();
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(timerInterval);
+                document.body.classList.remove('is-running');
+                playIconPath.setAttribute('d', 'M8 5v14l11-7z'); // Play Icon
+            } else {
+                isRunning = true;
+                document.body.classList.add('is-running');
+                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); // Pause Icon
+
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateVisuals();
+                        if (timeLeft % 5 === 0) sync();
+                    } else {
+                        toggleTimer();
+                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+                    }
+                }, 1000);
+            }
+            sync();
         }
 
-        // --- Firebase Sync ---
-        function syncToFirebase() {
+        playBtn.addEventListener('click', toggleTimer);
+
+        // Firebase Sync
+        function sync() {
             set(ref(database, 'timers/' + userId), {
                 timeLeft,
                 isRunning,
-                lastUpdate: Date.now(),
+                timestamp: Date.now(),
                 sessionId
             });
         }
 
         function initSync() {
-            onValue(ref(database, 'timers/' + userId), (snapshot) => {
-                const data = snapshot.val();
+            onValue(ref(database, 'timers/' + userId), (snap) => {
+                const data = snap.val();
                 if (!data || data.sessionId === sessionId) return;
 
-                // If data comes from another session
-                const elapsed = Math.floor((Date.now() - data.lastUpdate) / 1000);
-                let syncedTime = data.timeLeft;
+                const now = Date.now();
+                const elapsed = Math.floor((now - data.timestamp) / 1000);
+                let remoteTime = data.timeLeft;
 
                 if (data.isRunning) {
-                    syncedTime = Math.max(0, syncedTime - elapsed);
-                    if (!isRunning) startTimer();
+                    remoteTime = Math.max(0, remoteTime - elapsed);
+                    if (!isRunning) toggleTimer();
                 } else {
-                    if (isRunning) stopTimer();
+                    if (isRunning) toggleTimer();
                 }
 
-                // Only update if difference is significant (>1s) to prevent jitter
-                if (Math.abs(timeLeft - syncedTime) > 1) {
-                    timeLeft = syncedTime;
+                if (Math.abs(timeLeft - remoteTime) > 2) {
+                    timeLeft = remoteTime;
                     updateVisuals();
                 }
             });
         }
 
-        // --- Event Listeners ---
-        document.getElementById('playPauseBtn').addEventListener('click', toggleTimer);
-
-        // Drag knob event listeners
-        const dragKnob = document.getElementById('dragKnob');
-        dragKnob.addEventListener('mousedown', handleStart);
-        dragKnob.addEventListener('touchstart', handleStart, { passive: false });
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('touchmove', handleMove, { passive: false });
-        document.addEventListener('mouseup', handleEnd);
-        document.addEventListener('touchend', handleEnd);
-
-        // Settings Modal
+        // Modal Logic
         const modal = document.getElementById('settingsModal');
-        document.getElementById('settingsBtn').addEventListener('click', () => {
+        document.getElementById('settingsBtn').onclick = () => {
             document.getElementById('syncIdInput').value = userId;
             modal.classList.add('active');
-        });
-        document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('active'));
-
-        document.getElementById('copyIdBtn').addEventListener('click', () => {
-            navigator.clipboard.writeText(userId);
-            alert('ID Copied!');
-        });
-
-        document.getElementById('loadIdBtn').addEventListener('click', () => {
-            const newId = document.getElementById('syncIdInput').value.trim();
-            if (newId) {
-                userId = newId;
-                localStorage.setItem('userId', userId);
-                // Reset listener for new ID
+        };
+        document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
+        document.getElementById('loadIdBtn').onclick = () => {
+            const id = document.getElementById('syncIdInput').value.trim();
+            if(id) {
+                userId = id;
+                localStorage.setItem('userId', id);
                 initSync();
-                alert('Synced to new ID!');
                 modal.classList.remove('active');
             }
-        });
+        };
+        document.getElementById('copyIdBtn').onclick = () => {
+            navigator.clipboard.writeText(userId);
+            alert('ID Copied');
+        };
 
-        // --- Init ---
+        // Initialize
         drawDial();
         updateVisuals();
         initSync();
-        localStorage.setItem('userId', userId);
 
     </script>
 </body>
