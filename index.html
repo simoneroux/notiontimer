@@ -429,9 +429,14 @@
             console.log("📤 Syncing to Supabase:", payload);
             try {
                 const result = await supabase.from('timers').upsert(payload);
-                console.log("✅ Sync successful:", result);
+                if (result.error) {
+                    console.error("❌ Sync Write Error:", result.error);
+                    console.error("Error details:", JSON.stringify(result.error, null, 2));
+                } else {
+                    console.log("✅ Sync successful:", result);
+                }
             } catch(err) {
-                console.error("❌ Sync Write Error:", err);
+                console.error("❌ Sync Write Exception:", err);
             }
         }
 
