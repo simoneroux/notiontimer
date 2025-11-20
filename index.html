@@ -42,12 +42,11 @@
             height: 60px;
             display: flex;
             align-items: center;
-            justify-content: center; /* Center the title */
+            justify-content: center;
             padding: 0 30px;
             z-index: 100;
         }
 
-        /* Title */
         .app-title {
             font-size: 15px;
             font-weight: 600;
@@ -60,7 +59,6 @@
         .time-text { font-variant-numeric: tabular-nums; }
         .task-name { color: #999; font-weight: 400; }
 
-        /* Settings Icon (Absolute Right) */
         .settings-container {
             position: absolute;
             right: 30px;
@@ -89,23 +87,17 @@
             justify-content: center;
             align-items: center;
             cursor: grab;
-            /* Slight offset to account for header visually */
             margin-top: 10px;
         }
 
         .timer-container:active { cursor: grabbing; }
         body.is-running .timer-container { cursor: default; }
 
-        /* Background Colors (Counter-Clockwise Layout) */
         .dial-colors {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            /* 0-5 min (Red) = 330-360deg
-               5-10 min (Orange) = 300-330deg
-               ...etc
-            */
             background: conic-gradient(
                 #9059FF 0deg 120deg,    /* Purple */
                 #0088FF 120deg 210deg,  /* Blue */
@@ -116,13 +108,11 @@
             );
         }
 
-        /* Mask */
         .dial-mask {
             position: absolute;
             width: 100.5%;
             height: 100.5%;
             border-radius: 50%;
-            /* This mask rotates to reveal/hide the colors underneath */
             background: conic-gradient(
                 transparent 0deg,
                 transparent var(--angle, 0deg),
@@ -132,7 +122,6 @@
             z-index: 2;
         }
 
-        /* Ticks and Numbers */
         .dial-overlay {
             position: absolute;
             width: 100%;
@@ -148,7 +137,7 @@
             height: 12px;
             left: 50%;
             top: 0;
-            transform-origin: 50% 180px; /* Radius */
+            transform-origin: 50% 180px;
         }
         .tick.major {
             background: rgba(255, 255, 255, 0.5);
@@ -167,7 +156,6 @@
             text-align: center;
         }
 
-        /* Pointer */
         .pointer-container {
             position: absolute;
             width: 100%;
@@ -190,7 +178,6 @@
             transform-origin: bottom center;
         }
 
-        /* The Knob */
         .drag-knob {
             position: absolute;
             top: -10px;
@@ -214,7 +201,6 @@
             pointer-events: none;
         }
 
-        /* Center Dot */
         .center-dot {
             position: absolute;
             width: 12px;
@@ -245,12 +231,9 @@
             opacity: 0.7;
             transition: opacity 0.2s;
         }
-
         .control-icon { fill: #888; transition: fill 0.2s; }
-
         .control-btn:hover { opacity: 1; }
         .control-btn:hover .control-icon { fill: #fff; }
-
         .control-btn.play .control-icon { width: 28px; height: 28px; fill: #bbb; }
         .control-btn.play:hover .control-icon { fill: #fff; }
 
@@ -282,7 +265,6 @@
         .modal-box input:focus { outline: none; border-color: #666; }
 
         .modal-actions { display: flex; gap: 10px; justify-content: center; }
-
         .modal-btn {
             padding: 8px 16px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
         }
@@ -300,7 +282,6 @@
             <span style="color:#555">•</span>
             <span class="task-name" id="taskNameDisplay">Pomodoro</span>
         </div>
-
         <div class="settings-container">
             <svg class="svg-icon" id="settingsBtn" viewBox="0 0 24 24">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
@@ -312,13 +293,11 @@
         <div class="dial-colors"></div>
         <div class="dial-mask" id="dialMask"></div>
         <div class="dial-overlay" id="dialOverlay"></div>
-
         <div class="pointer-container" id="pointerContainer">
             <div class="pointer-arm">
                 <div class="drag-knob"></div>
             </div>
         </div>
-
         <div class="center-dot"></div>
     </div>
 
@@ -328,13 +307,11 @@
                 <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
             </svg>
         </button>
-
         <button class="control-btn play" id="playPauseBtn">
             <svg class="control-icon" id="playIcon" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
             </svg>
         </button>
-
         <button class="control-btn">
             <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24">
                 <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
@@ -379,7 +356,7 @@
         let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 6);
         let sessionId = 's_' + Date.now();
 
-        // Parse URL Param for Task Name
+        // --- URL PARAMETERS (INTEGRATED) ---
         const params = new URLSearchParams(window.location.search);
         const taskName = params.get('name') || 'Pomodoro';
         document.getElementById('taskNameDisplay').innerText = taskName;
@@ -391,7 +368,7 @@
         const playBtn = document.getElementById('playPauseBtn');
         const playIconPath = document.querySelector('#playIcon path');
 
-        // Draw Dial (Counter-Clockwise Logic)
+        // Drawing the Dial
         function drawDial() {
             const overlay = document.getElementById('dialOverlay');
             const radius = 180;
@@ -399,7 +376,6 @@
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick major' : 'tick';
-                // Rotate negative for CCW tick alignment
                 tick.style.transform = `rotate(-${i * 6}deg)`;
                 overlay.appendChild(tick);
 
@@ -408,8 +384,6 @@
                     num.className = 'number';
                     num.innerText = i === 0 ? "60'" : i;
 
-                    // CCW Positioning
-                    // 0 is Top (-90deg). Moving CCW is subtracting angle.
                     const angleDeg = -90 - (i * 6);
                     const angleRad = angleDeg * (Math.PI / 180);
                     const dist = 150;
@@ -433,22 +407,11 @@
         function updateVisuals() {
             headerTime.innerText = formatTime(timeLeft);
 
-            // Time to Angle Logic (CCW)
-            // 0 mins = 0 deg (Top/12 o'clock)
-            // 15 mins = 90 deg Left (9 o'clock) -> which is 270 deg Clockwise from Top
-            // Formula to get CW degrees from top: (360 - (mins * 6)) % 360
-
             const minutes = timeLeft / 60;
             const cwDegrees = (360 - (minutes * 6)) % 360;
 
             const pointer = document.getElementById('pointerContainer');
             pointer.style.setProperty('--angle', `${cwDegrees}deg`);
-
-            // Update Mask
-            // Reveal colors from 0 (Top) CCW to current angle.
-            // In CSS gradients, angles go CW.
-            // We want to see colors between `cwDegrees` and `360`.
-            // So we make 0 -> cwDegrees Transparent (hiding the unused colors).
 
             const mask = document.getElementById('dialMask');
             mask.style.background = `conic-gradient(
@@ -459,39 +422,20 @@
             )`;
         }
 
-        // Interaction
+        // Logic
         function getMinutesFromEvent(e) {
             const rect = container.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-            // Calculate Angle (Standard Trig: 0 at 3 o'clock)
             const x = clientX - centerX;
             const y = clientY - centerY;
             let angleDeg = Math.atan2(y, x) * (180 / Math.PI);
-
-            // Convert to "Degrees from 12 o'clock CW"
             let cwAngle = angleDeg + 90;
             if (cwAngle < 0) cwAngle += 360;
-
-            // Convert CW Angle to CCW Minutes
-            // 0 deg CW = 0 min
-            // 90 deg CW = 45 min (Because 90deg CW is 3 o'clock. In CCW layout, 3 o'clock is 45min)
-            // Wait.
-            // 12 o'clock (0 deg) = 0 min
-            // 9 o'clock (270 deg CW) = 15 min
-            // 6 o'clock (180 deg CW) = 30 min
-            // 3 o'clock (90 deg CW) = 45 min
-
-            // Formula: minutes = (360 - cwAngle) / 6
             let minutes = (360 - cwAngle) / 6;
-
-            // Handle edge case near 0/60
             if (minutes >= 59.5) minutes = 0;
-
             return Math.max(0, Math.min(60, Math.round(minutes)));
         }
 
@@ -499,7 +443,7 @@
             if (isRunning) return;
             isDragging = true;
             let m = getMinutesFromEvent(e);
-            if(m === 0) m = 60; // Snap to 60 if clicking top
+            if(m === 0) m = 60;
             timeLeft = m * 60;
             updateVisuals();
             sync();
@@ -528,17 +472,16 @@
         window.addEventListener('touchmove', handleMove);
         window.addEventListener('touchend', handleEnd);
 
-        // Timer Control
         function toggleTimer() {
             if (isRunning) {
                 isRunning = false;
                 clearInterval(timerInterval);
                 document.body.classList.remove('is-running');
-                playIconPath.setAttribute('d', 'M8 5v14l11-7z'); // Play Icon
+                playIconPath.setAttribute('d', 'M8 5v14l11-7z');
             } else {
                 isRunning = true;
                 document.body.classList.add('is-running');
-                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); // Pause Icon
+                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
 
                 timerInterval = setInterval(() => {
                     if (timeLeft > 0) {
@@ -556,13 +499,15 @@
 
         playBtn.addEventListener('click', toggleTimer);
 
-        // Firebase Sync
+        // Firebase Sync with Error Logging
         function sync() {
             set(ref(database, 'timers/' + userId), {
                 timeLeft,
                 isRunning,
                 timestamp: Date.now(),
                 sessionId
+            }).catch(err => {
+                console.error("Firebase Sync Failed (Check Rules/Config):", err);
             });
         }
 
@@ -570,26 +515,23 @@
             onValue(ref(database, 'timers/' + userId), (snap) => {
                 const data = snap.val();
                 if (!data || data.sessionId === sessionId) return;
-
                 const now = Date.now();
                 const elapsed = Math.floor((now - data.timestamp) / 1000);
                 let remoteTime = data.timeLeft;
-
                 if (data.isRunning) {
                     remoteTime = Math.max(0, remoteTime - elapsed);
                     if (!isRunning) toggleTimer();
                 } else {
                     if (isRunning) toggleTimer();
                 }
-
                 if (Math.abs(timeLeft - remoteTime) > 2) {
                     timeLeft = remoteTime;
                     updateVisuals();
                 }
-            });
+            }, (err) => console.error("Read Error:", err));
         }
 
-        // Modal Logic
+        // Modal
         const modal = document.getElementById('settingsModal');
         document.getElementById('settingsBtn').onclick = () => {
             document.getElementById('syncIdInput').value = userId;
@@ -610,10 +552,18 @@
             alert('ID Copied');
         };
 
-        // Initialize
+        // Init
         drawDial();
         updateVisuals();
         initSync();
+
+        // --- Auto Start from URL ---
+        // Check if we should start immediately after loading
+        setTimeout(() => {
+            if (params.get('action') === 'start' && !isRunning) {
+                toggleTimer();
+            }
+        }, 500);
 
     </script>
 </body>
