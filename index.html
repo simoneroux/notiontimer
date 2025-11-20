@@ -502,9 +502,13 @@
 
             // 2. Get initial state
             console.log("🔍 Fetching initial state for timer:", userId);
-            supabase.from('timers').select('*').eq('id', userId).single().then(({ data, error }) => {
+            supabase.from('timers').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
                 if(error) {
-                    console.log("ℹ️ No existing timer found (this is normal for first time):", error.message);
+                    console.error("❌ Error fetching initial state:", error);
+                    return;
+                }
+                if(!data) {
+                    console.log("ℹ️ No existing timer found (this is normal for first time)");
                     return;
                 }
                 if(data) {
