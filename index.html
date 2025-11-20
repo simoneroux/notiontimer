@@ -13,13 +13,7 @@
             --tick-color: rgba(255, 255, 255, 0.25);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-font-smoothing: antialiased;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-font-smoothing: antialiased; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -36,200 +30,95 @@
         /* --- Top Bar --- */
         .top-bar {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 30px;
-            z-index: 100;
+            top: 0; left: 0; width: 100%; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 30px; z-index: 100;
         }
 
         .app-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #ddd;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            letter-spacing: 0.5px;
+            font-size: 15px; font-weight: 600; color: #ddd;
+            display: flex; gap: 10px; align-items: center; letter-spacing: 0.5px;
         }
         .time-text { font-variant-numeric: tabular-nums; }
         .task-name { color: #999; font-weight: 400; }
 
-        .settings-container {
-            position: absolute;
-            right: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .svg-icon {
-            width: 18px;
-            height: 18px;
-            fill: var(--icon-color);
-            cursor: pointer;
-            transition: fill 0.2s ease, transform 0.5s ease;
-        }
-        .svg-icon:hover {
-            fill: var(--icon-hover);
-            transform: rotate(90deg);
-        }
+        .settings-container { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); }
+        .svg-icon { width: 18px; height: 18px; fill: var(--icon-color); cursor: pointer; transition: fill 0.2s ease, transform 0.5s ease; }
+        .svg-icon:hover { fill: var(--icon-hover); transform: rotate(90deg); }
 
         /* --- Timer Wheel --- */
         .timer-container {
-            position: relative;
-            width: 360px;
-            height: 360px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: grab;
-            margin-top: 10px;
+            position: relative; width: 360px; height: 360px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: grab; margin-top: 10px;
         }
-
         .timer-container:active { cursor: grabbing; }
         body.is-running .timer-container { cursor: default; }
 
         .dial-colors {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(
-                #9059FF 0deg 120deg,    /* Purple */
-                #0088FF 120deg 210deg,  /* Blue */
-                #50C8C6 210deg 270deg,  /* Teal */
-                #FFCD00 270deg 300deg,  /* Yellow */
-                #FF9F00 300deg 330deg,  /* Orange */
-                #FF4C4C 330deg 360deg   /* Red */
+                #9059FF 0deg 120deg,   #0088FF 120deg 210deg, #50C8C6 210deg 270deg,
+                #FFCD00 270deg 300deg, #FF9F00 300deg 330deg, #FF4C4C 330deg 360deg
             );
         }
 
         .dial-mask {
-            position: absolute;
-            width: 100.5%;
-            height: 100.5%;
-            border-radius: 50%;
+            position: absolute; width: 100.5%; height: 100.5%; border-radius: 50%;
             background: conic-gradient(
-                transparent 0deg,
-                transparent var(--angle, 0deg),
-                var(--bg-color) var(--angle, 0deg),
-                var(--bg-color) 360deg
+                transparent 0deg, transparent var(--angle, 0deg),
+                var(--bg-color) var(--angle, 0deg), var(--bg-color) 360deg
             );
             z-index: 2;
         }
 
-        .dial-overlay {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 4;
-            pointer-events: none;
-        }
+        .dial-overlay { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
 
         .tick {
-            position: absolute;
-            background: var(--tick-color);
-            width: 2px;
-            height: 12px;
-            left: 50%;
-            top: 0;
-            transform-origin: 50% 180px;
+            position: absolute; background: var(--tick-color); width: 2px; height: 12px;
+            left: 50%; top: 0; transform-origin: 50% 180px;
         }
-        .tick.major {
-            background: rgba(255, 255, 255, 0.5);
-            width: 3px;
-            height: 20px;
-        }
+        .tick.major { background: rgba(255, 255, 255, 0.5); width: 3px; height: 20px; }
 
         .number {
-            position: absolute;
-            font-size: 18px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-            transform: translate(-50%, -50%);
-            width: 40px;
-            text-align: center;
+            position: absolute; font-size: 18px; font-weight: 600;
+            color: rgba(255,255,255,0.9); text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            transform: translate(-50%, -50%); width: 40px; text-align: center;
         }
 
         .pointer-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            transform: rotate(var(--angle, 0deg));
-            transition: transform 0.1s linear;
-            pointer-events: none;
+            position: absolute; width: 100%; height: 100%; z-index: 10;
+            transform: rotate(var(--angle, 0deg)); transition: transform 0.1s linear; pointer-events: none;
         }
 
         .pointer-arm {
-            position: absolute;
-            left: calc(50% - 7px);
-            bottom: 50%;
-            width: 14px;
-            height: 165px;
-            background: #fff;
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            transform-origin: bottom center;
+            position: absolute; left: calc(50% - 7px); bottom: 50%;
+            width: 14px; height: 165px; background: #fff;
+            border-radius: 8px 8px 0 0; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: bottom center;
         }
 
         .drag-knob {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(to bottom, #ffffff, #dddddd);
-            border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            z-index: 11;
-            pointer-events: auto;
-            cursor: grab;
-            transition: opacity 0.3s ease, transform 0.2s;
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 24px; height: 24px; background: linear-gradient(to bottom, #ffffff, #dddddd);
+            border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            z-index: 11; pointer-events: auto; cursor: grab; transition: opacity 0.3s ease, transform 0.2s;
         }
         .drag-knob:hover { transform: translateX(-50%) scale(1.1); }
         .drag-knob:active { cursor: grabbing; }
-
-        body.is-running .drag-knob {
-            opacity: 0;
-            pointer-events: none;
-        }
+        body.is-running .drag-knob { opacity: 0; pointer-events: none; }
 
         .center-dot {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: var(--bg-color);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            z-index: 12;
+            position: absolute; width: 12px; height: 12px;
+            background: var(--bg-color); border: 3px solid #fff; border-radius: 50%; z-index: 12;
         }
 
-        /* --- Bottom Controls --- */
+        /* --- Controls --- */
         .controls {
-            position: fixed;
-            bottom: 60px;
-            display: flex;
-            align-items: center;
-            gap: 50px;
-            z-index: 100;
+            position: fixed; bottom: 60px; display: flex; align-items: center; gap: 50px; z-index: 100;
         }
-
         .control-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            background: none; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; opacity: 0.7; transition: opacity 0.2s;
         }
         .control-icon { fill: #888; transition: fill 0.2s; }
         .control-btn:hover { opacity: 1; }
@@ -239,23 +128,13 @@
 
         /* --- Modal --- */
         .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 1000; align-items: center; justify-content: center;
         }
         .modal.active { display: flex; }
         .modal-box {
-            background: #333;
-            padding: 25px;
-            border-radius: 12px;
-            width: 300px;
-            text-align: center;
-            border: 1px solid #444;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #333; padding: 25px; border-radius: 12px; width: 300px;
+            text-align: center; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .modal-box h3 { color: #fff; margin-bottom: 15px; font-weight: 500; font-size: 18px;}
         .modal-box input {
@@ -263,7 +142,6 @@
             background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 14px;
         }
         .modal-box input:focus { outline: none; border-color: #666; }
-
         .modal-actions { display: flex; gap: 10px; justify-content: center; }
         .modal-btn {
             padding: 8px 16px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
@@ -271,7 +149,6 @@
         .modal-btn:hover { background: #555; }
         .modal-btn.primary { background: #0088FF; }
         .modal-btn.primary:hover { background: #0077EE; }
-
     </style>
 </head>
 <body>
@@ -303,29 +180,23 @@
 
     <div class="controls">
         <button class="control-btn">
-            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24">
-                <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
-            </svg>
+            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
         </button>
         <button class="control-btn play" id="playPauseBtn">
-            <svg class="control-icon" id="playIcon" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-            </svg>
+            <svg class="control-icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
         <button class="control-btn">
-            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24">
-                <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
-            </svg>
+            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
         </button>
     </div>
 
     <div class="modal" id="settingsModal">
         <div class="modal-box">
-            <h3>Sync Timer</h3>
-            <input type="text" id="syncIdInput" placeholder="Enter Session ID">
+            <h3>Sync ID</h3>
+            <input type="text" id="syncIdInput" placeholder="e.g. my-timer">
             <div class="modal-actions">
-                <button class="modal-btn" id="copyIdBtn">Copy ID</button>
-                <button class="modal-btn primary" id="loadIdBtn">Join</button>
+                <button class="modal-btn" id="copyIdBtn">Copy URL</button>
+                <button class="modal-btn primary" id="loadIdBtn">Save</button>
                 <button class="modal-btn" id="closeModal">Close</button>
             </div>
         </div>
@@ -348,55 +219,57 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // State
-        let timeLeft = 25 * 60;
+        // --- VARIABLES ---
+        let timeLeft = 25 * 60; // Seconds remaining (calculated locally)
         let isRunning = false;
         let isDragging = false;
-        let timerInterval = null;
-        let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 6);
-        let sessionId = 's_' + Date.now();
+        let animationFrame = null;
 
-        // --- SOUNDS (UPDATED) ---
-        // Triangle Hit for Start
-        const startSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3');
-        // Harp Glissando for End
-        const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/608/608-preview.mp3');
+        // Sync Data
+        let endTime = 0; // Timestamp when timer ends
+        let lastSyncedDuration = 25 * 60; // To remember what 100% is for a session
 
-        // --- URL PARAMETERS ---
+        // Sounds
+        const startSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3'); // Triangle
+        const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/608/608-preview.mp3');   // Harp
+
+        // --- ID & URL Management ---
         const params = new URLSearchParams(window.location.search);
+        // User ID Logic: Prefer URL param, then LocalStorage, then Random
+        let userId = params.get('id') || localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
+
+        // Save to local storage so it persists even if they clear URL
+        localStorage.setItem('userId', userId);
+
+        // Task Name
         const taskName = params.get('name') || 'Pomodoro';
         document.getElementById('taskNameDisplay').innerText = taskName;
         document.title = taskName + " Focus";
 
-        // DOM
+        // DOM Elements
         const container = document.getElementById('timerContainer');
         const headerTime = document.getElementById('headerTime');
         const playBtn = document.getElementById('playPauseBtn');
         const playIconPath = document.querySelector('#playIcon path');
 
-        // Drawing the Dial
+        // --- GRAPHICS ---
         function drawDial() {
             const overlay = document.getElementById('dialOverlay');
             const radius = 180;
-
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick major' : 'tick';
                 tick.style.transform = `rotate(-${i * 6}deg)`;
                 overlay.appendChild(tick);
-
                 if (i % 5 === 0) {
                     const num = document.createElement('div');
                     num.className = 'number';
                     num.innerText = i === 0 ? "60'" : i;
-
                     const angleDeg = -90 - (i * 6);
                     const angleRad = angleDeg * (Math.PI / 180);
                     const dist = 150;
-
                     const x = 50 + (dist/radius * 50) * Math.cos(angleRad);
                     const y = 50 + (dist/radius * 50) * Math.sin(angleRad);
-
                     num.style.left = x + '%';
                     num.style.top = y + '%';
                     overlay.appendChild(num);
@@ -413,6 +286,7 @@
         function updateVisuals() {
             headerTime.innerText = formatTime(timeLeft);
 
+            // Calculate Angle (Counter Clockwise logic)
             const minutes = timeLeft / 60;
             const cwDegrees = (360 - (minutes * 6)) % 360;
 
@@ -428,7 +302,7 @@
             )`;
         }
 
-        // Logic
+        // --- DRAGGING LOGIC ---
         function getMinutesFromEvent(e) {
             const rect = container.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -452,7 +326,7 @@
             if(m === 0) m = 60;
             timeLeft = m * 60;
             updateVisuals();
-            sync();
+            // Don't sync continuously while dragging, wait for end
         }
 
         function handleMove(e) {
@@ -467,7 +341,7 @@
         function handleEnd() {
             if (isDragging) {
                 isDragging = false;
-                sync();
+                pushStateToFirebase(); // Sync the new time
             }
         }
 
@@ -478,98 +352,158 @@
         window.addEventListener('touchmove', handleMove);
         window.addEventListener('touchend', handleEnd);
 
-        function toggleTimer() {
-            if (isRunning) {
-                isRunning = false;
-                clearInterval(timerInterval);
-                document.body.classList.remove('is-running');
-                playIconPath.setAttribute('d', 'M8 5v14l11-7z');
+        // --- TIMER LOGIC (TIMESTAMP BASED) ---
+
+        function tick() {
+            if (!isRunning) return;
+
+            const now = Date.now();
+            const remaining = Math.ceil((endTime - now) / 1000);
+
+            if (remaining <= 0) {
+                timeLeft = 0;
+                stopTimer();
+                alarmSound.play().catch(e => console.log("Audio error", e));
             } else {
-                isRunning = true;
-                document.body.classList.add('is-running');
-                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-
-                // Play Triangle (Start)
-                startSound.currentTime = 0;
-                startSound.play().catch(e => console.log("Audio error", e));
-
-                timerInterval = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateVisuals();
-                        if (timeLeft % 5 === 0) sync();
-                    } else {
-                        toggleTimer(); // Stop
-                        // Play Harp (End)
-                        alarmSound.play().catch(e => console.log("Audio error", e));
-                    }
-                }, 1000);
+                // Only update visuals if seconds changed
+                if (remaining !== timeLeft) {
+                    timeLeft = remaining;
+                    updateVisuals();
+                }
+                animationFrame = requestAnimationFrame(tick);
             }
-            sync();
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+
+            // Calculate target end time
+            // If timeLeft is 0, default to 25 min
+            if (timeLeft <= 0) timeLeft = 25 * 60;
+
+            endTime = Date.now() + (timeLeft * 1000);
+            isRunning = true;
+
+            // UI
+            document.body.classList.add('is-running');
+            playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); // Pause Icon
+
+            // Sound
+            startSound.currentTime = 0;
+            startSound.play().catch(e => console.log("Audio error", e));
+
+            // Start Loop
+            tick();
+
+            // Sync
+            pushStateToFirebase();
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            cancelAnimationFrame(animationFrame);
+
+            // UI
+            document.body.classList.remove('is-running');
+            playIconPath.setAttribute('d', 'M8 5v14l11-7z'); // Play Icon
+
+            pushStateToFirebase();
+        }
+
+        function toggleTimer() {
+            isRunning ? stopTimer() : startTimer();
         }
 
         playBtn.addEventListener('click', toggleTimer);
 
-        // Firebase Sync
-        function sync() {
+        // --- FIREBASE SYNC (SOLID TIMESTAMP APPROACH) ---
+
+        // 1. WRITE to Firebase
+        function pushStateToFirebase() {
             set(ref(database, 'timers/' + userId), {
-                timeLeft,
-                isRunning,
-                timestamp: Date.now(),
-                sessionId
-            }).catch(err => console.error("Sync Error:", err));
+                isRunning: isRunning,
+                endTime: isRunning ? endTime : null, // Only save EndTime if running
+                pausedRemaining: isRunning ? null : timeLeft, // If paused, save the static number
+                timestamp: Date.now() // For debugging lag
+            }).catch(err => console.error("Sync Write Error:", err));
         }
 
+        // 2. READ from Firebase
         function initSync() {
             onValue(ref(database, 'timers/' + userId), (snap) => {
                 const data = snap.val();
-                if (!data || data.sessionId === sessionId) return;
-                const now = Date.now();
-                const elapsed = Math.floor((now - data.timestamp) / 1000);
-                let remoteTime = data.timeLeft;
-                if (data.isRunning) {
-                    remoteTime = Math.max(0, remoteTime - elapsed);
-                    if (!isRunning) toggleTimer();
+                if (!data) return;
+
+                // Determine if we should be running based on Server Data
+                const serverIsRunning = data.isRunning;
+
+                if (serverIsRunning) {
+                    // Server says we are running. Calculate remaining based on EndTime.
+                    const now = Date.now();
+                    const secondsLeft = Math.ceil((data.endTime - now) / 1000);
+
+                    if (secondsLeft > 0) {
+                        endTime = data.endTime;
+                        timeLeft = secondsLeft;
+
+                        // If we aren't running locally, start up
+                        if (!isRunning) {
+                            isRunning = true;
+                            document.body.classList.add('is-running');
+                            playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+                            tick();
+                        }
+                    } else {
+                        // Timer finished while we were away
+                        timeLeft = 0;
+                        if (isRunning) stopTimer();
+                    }
                 } else {
-                    if (isRunning) toggleTimer();
+                    // Server says paused.
+                    if (isRunning) stopTimer();
+
+                    // Update local time to match server's paused time
+                    // (Only if significant difference to prevent jitter while dragging)
+                    if (!isDragging && Math.abs(timeLeft - data.pausedRemaining) > 1) {
+                        timeLeft = data.pausedRemaining || (25*60);
+                    }
                 }
-                if (Math.abs(timeLeft - remoteTime) > 2) {
-                    timeLeft = remoteTime;
-                    updateVisuals();
-                }
-            }, (err) => console.error("Read Error:", err));
+                updateVisuals();
+            });
         }
 
-        // Modal
+        // --- MODAL ---
         const modal = document.getElementById('settingsModal');
         document.getElementById('settingsBtn').onclick = () => {
             document.getElementById('syncIdInput').value = userId;
             modal.classList.add('active');
         };
         document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
+
         document.getElementById('loadIdBtn').onclick = () => {
             const id = document.getElementById('syncIdInput').value.trim();
             if(id) {
-                userId = id;
-                localStorage.setItem('userId', id);
-                initSync();
-                modal.classList.remove('active');
+                // Update ID and reload page to force clean sync state
+                window.location.search = `?id=${id}&name=${taskName}`;
             }
         };
+
         document.getElementById('copyIdBtn').onclick = () => {
-            navigator.clipboard.writeText(userId);
-            alert('ID Copied');
+            // Copy the full URL with ID
+            const url = `${window.location.origin}${window.location.pathname}?id=${userId}`;
+            navigator.clipboard.writeText(url);
+            alert('Link copied! Open this on your other device.');
         };
 
-        // Init
+        // --- INIT ---
         drawDial();
         updateVisuals();
         initSync();
 
-        // Auto Start
+        // Auto-Start URL Logic
         setTimeout(() => {
             if (params.get('action') === 'start' && !isRunning) {
-                toggleTimer();
+                startTimer();
             }
         }, 500);
 
