@@ -414,43 +414,65 @@
 
         // 1. WRITE to Supabase
         async function syncToSupabase() {
-            if(!supabase) return;
+            if(!supabase) {
+                console.warn("Supabase not initialized, skipping sync");
+                return;
+            }
             const payload = {
                 id: userId,
                 end_time: isRunning ? endTime : null,
                 is_running: isRunning,
                 paused_remaining: isRunning ? null : timeLeft,
+                task_name: taskName,
                 updated_at: Date.now()
             };
+            console.log("📤 Syncing to Supabase:", payload);
             try {
-                await supabase.from('timers').upsert(payload);
+                const result = await supabase.from('timers').upsert(payload);
+                console.log("✅ Sync successful:", result);
             } catch(err) {
-                console.error("Sync Write Error:", err);
+                console.error("❌ Sync Write Error:", err);
             }
         }
 
         // 2. READ from Supabase
         function initSync() {
-            if(!supabase) return;
+            if(!supabase) {
+                console.warn("Supabase not initialized, skipping sync setup");
+                return;
+            }
+
+            console.log("🔄 Setting up Realtime subscription for timer:", userId);
 
             // 1. Listen for changes
-            supabase.channel('any')
+            const channel = supabase.channel('timer-sync-' + userId)
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'timers',
                     filter: `id=eq.${userId}`
                 }, payload => {
+                    console.log("📥 Received sync update:", payload);
                     const data = payload.new;
-                    if (data.updated_at > (Date.now() - 500)) return; // Ignore very recent self-updates (500ms window)
+                    const age = Date.now() - data.updated_at;
+                    console.log(`⏱️ Update age: ${age}ms`);
+
+                    if (age < 500) {
+                        console.log("⏭️ Skipping self-update (too recent)");
+                        return;
+                    }
+
+                    console.log("✅ Processing remote update:", data);
 
                     if (data.is_running) {
                         const now = Date.now();
                         const secondsLeft = Math.ceil((data.end_time - now) / 1000);
+                        console.log(`▶️ Remote timer running, ${secondsLeft}s left`);
                         if (secondsLeft > 0) {
                             endTime = data.end_time;
                             timeLeft = secondsLeft;
                             if (!isRunning) {
+                                console.log("🚀 Starting local timer to match remote");
                                 isRunning = true;
                                 document.body.classList.add('is-running');
                                 playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
@@ -461,6 +483,7 @@
                             if(isRunning) stopTimer();
                         }
                     } else {
+                        console.log("⏸️ Remote timer paused");
                         if (isRunning) stopTimer();
                         if (!isDragging && Math.abs(timeLeft - data.paused_remaining) > 1) {
                             timeLeft = data.paused_remaining || (25*60);
@@ -468,17 +491,39 @@
                     }
                     updateVisuals();
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    console.log("📡 Subscription status:", status);
+                    if (status === 'SUBSCRIBED') {
+                        console.log("✅ Successfully subscribed to Realtime updates");
+                    } else if (status === 'CHANNEL_ERROR') {
+                        console.error("❌ Channel error - sync will not work");
+                    }
+                });
 
             // 2. Get initial state
-            supabase.from('timers').select('*').eq('id', userId).single().then(({ data }) => {
+            console.log("🔍 Fetching initial state for timer:", userId);
+            supabase.from('timers').select('*').eq('id', userId).single().then(({ data, error }) => {
+                if(error) {
+                    console.log("ℹ️ No existing timer found (this is normal for first time):", error.message);
+                    return;
+                }
                 if(data) {
+                   console.log("📦 Loaded initial state:", data);
+
+                   // Update task name if it exists in DB
+                   if(data.task_name && !params.get('name')) {
+                       document.getElementById('taskNameDisplay').innerText = data.task_name;
+                       document.title = data.task_name + " Focus";
+                   }
+
                    if (data.is_running) {
                         const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
+                        console.log(`▶️ Initial state: Timer running with ${secondsLeft}s left`);
                         if (secondsLeft > 0) {
                             endTime = data.end_time;
                             timeLeft = secondsLeft;
                             if (!isRunning) {
+                                console.log("🚀 Starting timer from initial state");
                                 isRunning=true;
                                 document.body.classList.add('is-running');
                                 playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
@@ -488,6 +533,7 @@
                             timeLeft = 0;
                         }
                    } else {
+                       console.log(`⏸️ Initial state: Timer paused at ${data.paused_remaining}s`);
                        timeLeft = data.paused_remaining || (25*60);
                    }
                    updateVisuals();
