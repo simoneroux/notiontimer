@@ -235,6 +235,10 @@
         // Save to local storage so it persists even if they clear URL
         localStorage.setItem('userId', userId);
 
+        // Session ID: Unique per browser tab/window (not saved to localStorage)
+        const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+        console.log("🔑 Session ID:", sessionId);
+
         // Task Name
         const taskName = params.get('name') || 'Pomodoro';
         document.getElementById('taskNameDisplay').innerText = taskName;
@@ -424,6 +428,7 @@
                 is_running: isRunning,
                 paused_remaining: isRunning ? null : timeLeft,
                 task_name: taskName,
+                session_id: sessionId,
                 updated_at: Date.now()
             };
             console.log("📤 Syncing to Supabase:", payload);
@@ -459,14 +464,15 @@
                 }, payload => {
                     console.log("📥 Received sync update:", payload);
                     const data = payload.new;
-                    const age = Date.now() - data.updated_at;
-                    console.log(`⏱️ Update age: ${age}ms`);
 
-                    if (age < 500) {
-                        console.log("⏭️ Skipping self-update (too recent)");
+                    // Check if this is our own update by comparing session IDs
+                    if (data.session_id === sessionId) {
+                        console.log("⏭️ Skipping self-update (same session ID)");
                         return;
                     }
 
+                    const age = Date.now() - data.updated_at;
+                    console.log(`⏱️ Update age: ${age}ms from session: ${data.session_id}`);
                     console.log("✅ Processing remote update:", data);
 
                     if (data.is_running) {
