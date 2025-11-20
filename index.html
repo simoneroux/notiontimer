@@ -356,7 +356,13 @@
         let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 6);
         let sessionId = 's_' + Date.now();
 
-        // --- URL PARAMETERS (INTEGRATED) ---
+        // --- SOUNDS (UPDATED) ---
+        // Triangle Hit for Start
+        const startSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3');
+        // Harp Glissando for End
+        const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/608/608-preview.mp3');
+
+        // --- URL PARAMETERS ---
         const params = new URLSearchParams(window.location.search);
         const taskName = params.get('name') || 'Pomodoro';
         document.getElementById('taskNameDisplay').innerText = taskName;
@@ -483,14 +489,19 @@
                 document.body.classList.add('is-running');
                 playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
 
+                // Play Triangle (Start)
+                startSound.currentTime = 0;
+                startSound.play().catch(e => console.log("Audio error", e));
+
                 timerInterval = setInterval(() => {
                     if (timeLeft > 0) {
                         timeLeft--;
                         updateVisuals();
                         if (timeLeft % 5 === 0) sync();
                     } else {
-                        toggleTimer();
-                        new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+                        toggleTimer(); // Stop
+                        // Play Harp (End)
+                        alarmSound.play().catch(e => console.log("Audio error", e));
                     }
                 }, 1000);
             }
@@ -499,16 +510,14 @@
 
         playBtn.addEventListener('click', toggleTimer);
 
-        // Firebase Sync with Error Logging
+        // Firebase Sync
         function sync() {
             set(ref(database, 'timers/' + userId), {
                 timeLeft,
                 isRunning,
                 timestamp: Date.now(),
                 sessionId
-            }).catch(err => {
-                console.error("Firebase Sync Failed (Check Rules/Config):", err);
-            });
+            }).catch(err => console.error("Sync Error:", err));
         }
 
         function initSync() {
@@ -557,8 +566,7 @@
         updateVisuals();
         initSync();
 
-        // --- Auto Start from URL ---
-        // Check if we should start immediately after loading
+        // Auto Start
         setTimeout(() => {
             if (params.get('action') === 'start' && !isRunning) {
                 toggleTimer();
