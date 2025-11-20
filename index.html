@@ -436,13 +436,13 @@
             // 1. Listen for changes
             supabase.channel('any')
                 .on('postgres_changes', {
-                    event: 'UPDATE',
+                    event: '*',
                     schema: 'public',
                     table: 'timers',
                     filter: `id=eq.${userId}`
                 }, payload => {
                     const data = payload.new;
-                    if (data.updated_at > (Date.now() - 2000)) return; // Ignore recent self-updates
+                    if (data.updated_at > (Date.now() - 500)) return; // Ignore very recent self-updates (500ms window)
 
                     if (data.is_running) {
                         const now = Date.now();
