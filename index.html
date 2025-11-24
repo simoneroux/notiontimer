@@ -47,12 +47,27 @@
             margin-top: env(safe-area-inset-top);
         }
 
+        /* UPDATED: Stacked Title Styles */
         .app-title {
-            font-size: 15px; font-weight: 600; color: #ddd;
-            display: flex; gap: 10px; align-items: center; letter-spacing: 0.5px;
+            display: flex; 
+            flex-direction: column; /* Stacks items vertically */
+            align-items: center; 
+            justify-content: center;
+            gap: 2px;
         }
-        .time-text { font-variant-numeric: tabular-nums; }
-        .task-name { color: #999; font-weight: 400; }
+        .time-text { 
+            font-variant-numeric: tabular-nums; 
+            font-size: 17px; 
+            font-weight: 600; 
+            color: #fff;
+            line-height: 1.1;
+        }
+        .task-name { 
+            color: #888; 
+            font-size: 12px; 
+            font-weight: 400; 
+            line-height: 1.1;
+        }
 
         .settings-container { 
             position: absolute; right: 30px; top: 50%; transform: translateY(-50%); 
@@ -189,7 +204,6 @@
     <div class="top-bar">
         <div class="app-title">
             <span class="time-text" id="headerTime">25:00</span>
-            <span style="color:#555">•</span>
             <span class="task-name" id="taskNameDisplay">Pomodoro</span>
         </div>
         
@@ -569,19 +583,19 @@
                        document.title = data.task_name + " Focus";
                    }
                    if (data.is_running) {
-                        const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
-                        if (secondsLeft > 0) {
-                            endTime = data.end_time;
-                            timeLeft = secondsLeft;
-                            if (!isRunning) {
-                                isRunning=true;
-                                document.body.classList.add('is-running');
-                                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                                tick();
-                            }
-                        } else {
-                            timeLeft = 0;
-                        }
+                       const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
+                       if (secondsLeft > 0) {
+                           endTime = data.end_time;
+                           timeLeft = secondsLeft;
+                           if (!isRunning) {
+                               isRunning=true;
+                               document.body.classList.add('is-running');
+                               playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+                               tick();
+                           }
+                       } else {
+                           timeLeft = 0;
+                       }
                    } else {
                        timeLeft = data.paused_remaining || (25*60);
                    }
