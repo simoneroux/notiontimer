@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Focus Timer</title>
+    
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Focus">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#262626">
     <style>
         :root {
             --bg-color: #262626;
@@ -11,9 +19,11 @@
             --icon-color: #666666;
             --icon-hover: #aaaaaa;
             --tick-color: rgba(255, 255, 255, 0.25);
+            --accent-color: #0088FF;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-font-smoothing: antialiased; }
+        /* Prevent text selection and rubber-banding on iOS */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -25,6 +35,9 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            /* Safe area padding for notched iPhones */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* --- Top Bar --- */
@@ -33,6 +46,7 @@
             top: 0; left: 0; width: 100%; height: 60px;
             display: flex; align-items: center; justify-content: center;
             padding: 0 30px; z-index: 100;
+            margin-top: env(safe-area-inset-top); /* Push down below notch */
         }
 
         .app-title {
@@ -42,9 +56,39 @@
         .time-text { font-variant-numeric: tabular-nums; }
         .task-name { color: #999; font-weight: 400; }
 
-        .settings-container { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); }
+        .settings-container { 
+            position: absolute; right: 30px; top: 50%; transform: translateY(-50%); 
+            display: flex; align-items: center; gap: 20px;
+        }
+
         .svg-icon { width: 18px; height: 18px; fill: var(--icon-color); cursor: pointer; transition: fill 0.2s ease, transform 0.5s ease; }
         .svg-icon:hover { fill: var(--icon-hover); transform: rotate(90deg); }
+
+        /* --- Toggle Switch CSS --- */
+        .switch-wrapper {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .switch-icon { fill: var(--icon-color); width: 14px; height: 14px; }
+        
+        .switch {
+            position: relative; display: inline-block; width: 34px; height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444; border-radius: 34px;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 14px; width: 14px; left: 3px; bottom: 3px;
+            background-color: white; border-radius: 50%;
+            transition: .4s;
+        }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(14px); }
 
         /* --- Timer Wheel --- */
         .timer-container {
@@ -115,6 +159,7 @@
         /* --- Controls --- */
         .controls {
             position: fixed; bottom: 60px; display: flex; align-items: center; gap: 50px; z-index: 100;
+            margin-bottom: env(safe-area-inset-bottom); /* Push up from home swipe bar */
         }
         .control-btn {
             background: none; border: none; cursor: pointer; display: flex;
@@ -159,7 +204,16 @@
             <span style="color:#555">•</span>
             <span class="task-name" id="taskNameDisplay">Pomodoro</span>
         </div>
+        
         <div class="settings-container">
+            <div class="switch-wrapper" title="Keep Screen On">
+                <svg class="switch-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 9c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                <label class="switch">
+                    <input type="checkbox" id="wakeLockToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
             <svg class="svg-icon" id="settingsBtn" viewBox="0 0 24 24">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
             </svg>
@@ -220,10 +274,26 @@
         let animationFrame = null;
         
         // --- WAKE LOCK START ---
-        // Keeps the screen on while the timer is running
         let wakeLock = null;
+        const wakeLockToggle = document.getElementById('wakeLockToggle');
+
+        // Initial check
+        let isWakeLockEnabled = wakeLockToggle.checked; 
+
+        // Listen for switch changes
+        wakeLockToggle.addEventListener('change', (e) => {
+            isWakeLockEnabled = e.target.checked;
+            console.log("Keep Screen On:", isWakeLockEnabled);
+            
+            if (isWakeLockEnabled && isRunning) {
+                requestWakeLock();
+            } else if (!isWakeLockEnabled) {
+                releaseWakeLock();
+            }
+        });
 
         async function requestWakeLock() {
+            if (!isWakeLockEnabled) return;
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
@@ -244,9 +314,8 @@
             }
         }
 
-        // Re-acquire lock if user switches tabs and comes back while running
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible' && isRunning) {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isRunning && isWakeLockEnabled) {
                 await requestWakeLock();
             }
         });
@@ -262,17 +331,14 @@
 
         // --- ID & URL Management ---
         const params = new URLSearchParams(window.location.search);
-        // User ID Logic: Prefer URL param, then LocalStorage, then Random
         let userId = params.get('id') || localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
 
-        // Save to local storage so it persists even if they clear URL
+        // Save to local storage
         localStorage.setItem('userId', userId);
 
-        // Session ID: Unique per browser tab/window (not saved to localStorage)
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
         console.log("🔑 Session ID:", sessionId);
 
-        // Task Name
         const taskName = params.get('name') || 'Pomodoro';
         document.getElementById('taskNameDisplay').innerText = taskName;
         document.title = taskName + " Focus";
@@ -316,8 +382,6 @@
 
         function updateVisuals() {
             headerTime.innerText = formatTime(timeLeft);
-
-            // Calculate Angle (Counter Clockwise logic)
             const minutes = timeLeft / 60;
             const cwDegrees = (360 - (minutes * 6)) % 360;
 
@@ -357,7 +421,6 @@
             if(m === 0) m = 60;
             timeLeft = m * 60;
             updateVisuals();
-            // Don't sync continuously while dragging, wait for end
         }
 
         function handleMove(e) {
@@ -372,7 +435,7 @@
         function handleEnd() {
             if (isDragging) {
                 isDragging = false;
-                syncToSupabase(); // Sync the new time
+                syncToSupabase();
             }
         }
 
@@ -396,7 +459,6 @@
                 stopTimer();
                 alarmSound.play().catch(e => console.log("Audio error", e));
             } else {
-                // Only update visuals if seconds changed
                 if (remaining !== timeLeft) {
                     timeLeft = remaining;
                     updateVisuals();
@@ -407,29 +469,20 @@
 
         function startTimer() {
             if (isRunning) return;
-
-            // Calculate target end time
-            // If timeLeft is 0, default to 25 min
             if (timeLeft <= 0) timeLeft = 25 * 60;
 
             endTime = Date.now() + (timeLeft * 1000);
             isRunning = true;
 
-            // UI
             document.body.classList.add('is-running');
-            playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); // Pause Icon
+            playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); 
 
-            // Sound
             startSound.currentTime = 0;
             startSound.play().catch(e => console.log("Audio error", e));
 
-            // <--- WAKE LOCK REQUEST --->
-            requestWakeLock();
+            if (isWakeLockEnabled) requestWakeLock();
 
-            // Start Loop
             tick();
-
-            // Sync
             syncToSupabase();
         }
 
@@ -437,13 +490,10 @@
             isRunning = false;
             cancelAnimationFrame(animationFrame);
 
-            // UI
             document.body.classList.remove('is-running');
-            playIconPath.setAttribute('d', 'M8 5v14l11-7z'); // Play Icon
+            playIconPath.setAttribute('d', 'M8 5v14l11-7z'); 
 
-            // <--- WAKE LOCK RELEASE --->
             releaseWakeLock();
-
             syncToSupabase();
         }
 
@@ -453,14 +503,9 @@
 
         playBtn.addEventListener('click', toggleTimer);
 
-        // --- SUPABASE SYNC (TIMESTAMP APPROACH) ---
-
-        // 1. WRITE to Supabase
+        // --- SUPABASE SYNC ---
         async function syncToSupabase() {
-            if(!supabase) {
-                console.warn("Supabase not initialized, skipping sync");
-                return;
-            }
+            if(!supabase) return;
             const payload = {
                 id: userId,
                 end_time: isRunning ? endTime : null,
@@ -470,66 +515,32 @@
                 session_id: sessionId,
                 updated_at: Date.now()
             };
-            console.log("📤 Syncing to Supabase:", payload);
             try {
-                const result = await supabase.from('timers').upsert(payload);
-                if (result.error) {
-                    console.error("❌ Sync Write Error:", result.error);
-                    console.error("Error details:", JSON.stringify(result.error, null, 2));
-                } else {
-                    console.log("✅ Sync successful:", result);
-                }
-            } catch(err) {
-                console.error("❌ Sync Write Exception:", err);
-            }
+                await supabase.from('timers').upsert(payload);
+            } catch(err) { console.error("Sync error", err); }
         }
 
-        // 2. READ from Supabase
         function initSync() {
-            if(!supabase) {
-                console.warn("Supabase not initialized, skipping sync setup");
-                return;
-            }
+            if(!supabase) return;
 
-            console.log("🔄 Setting up Realtime subscription for timer:", userId);
-
-            // 1. Listen for changes
             const channel = supabase.channel('timer-sync-' + userId)
                 .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'timers',
-                    filter: `id=eq.${userId}`
+                    event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}`
                 }, payload => {
-                    console.log("📥 Received sync update:", payload);
                     const data = payload.new;
-
-                    // Check if this is our own update by comparing session IDs
-                    if (data.session_id === sessionId) {
-                        console.log("⏭️ Skipping self-update (same session ID)");
-                        return;
-                    }
-
-                    const age = Date.now() - data.updated_at;
-                    console.log(`⏱️ Update age: ${age}ms from session: ${data.session_id}`);
-                    console.log("✅ Processing remote update:", data);
+                    if (data.session_id === sessionId) return;
 
                     if (data.is_running) {
                         const now = Date.now();
                         const secondsLeft = Math.ceil((data.end_time - now) / 1000);
-                        console.log(`▶️ Remote timer running, ${secondsLeft}s left`);
                         if (secondsLeft > 0) {
                             endTime = data.end_time;
                             timeLeft = secondsLeft;
                             if (!isRunning) {
-                                console.log("🚀 Starting local timer to match remote");
                                 isRunning = true;
                                 document.body.classList.add('is-running');
                                 playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                                
-                                // <--- WAKE LOCK REQUEST (May fail if background) --->
-                                requestWakeLock();
-
+                                if(isWakeLockEnabled) requestWakeLock();
                                 tick();
                             }
                         } else {
@@ -537,7 +548,6 @@
                             if(isRunning) stopTimer();
                         }
                     } else {
-                        console.log("⏸️ Remote timer paused");
                         if (isRunning) stopTimer();
                         if (!isDragging && Math.abs(timeLeft - data.paused_remaining) > 1) {
                             timeLeft = data.paused_remaining || (25*60);
@@ -545,57 +555,30 @@
                     }
                     updateVisuals();
                 })
-                .subscribe((status) => {
-                    console.log("📡 Subscription status:", status);
-                    if (status === 'SUBSCRIBED') {
-                        console.log("✅ Successfully subscribed to Realtime updates");
-                    } else if (status === 'CHANNEL_ERROR') {
-                        console.error("❌ Channel error - sync will not work");
-                    }
-                });
+                .subscribe();
 
-            // 2. Get initial state
-            console.log("🔍 Fetching initial state for timer:", userId);
             supabase.from('timers').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
-                if(error) {
-                    console.error("❌ Error fetching initial state:", error);
-                    return;
-                }
-                if(!data) {
-                    console.log("ℹ️ No existing timer found (this is normal for first time)");
-                    return;
-                }
-                if(data) {
-                   console.log("📦 Loaded initial state:", data);
-
-                   // Update task name if it exists in DB
+                if(!error && data) {
                    if(data.task_name && !params.get('name')) {
                        document.getElementById('taskNameDisplay').innerText = data.task_name;
                        document.title = data.task_name + " Focus";
                    }
-
                    if (data.is_running) {
                         const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
-                        console.log(`▶️ Initial state: Timer running with ${secondsLeft}s left`);
                         if (secondsLeft > 0) {
                             endTime = data.end_time;
                             timeLeft = secondsLeft;
                             if (!isRunning) {
-                                console.log("🚀 Starting timer from initial state");
                                 isRunning=true;
                                 document.body.classList.add('is-running');
                                 playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                                
-                                // <--- WAKE LOCK REQUEST --->
-                                requestWakeLock();
-
+                                if(isWakeLockEnabled) requestWakeLock();
                                 tick();
                             }
                         } else {
                             timeLeft = 0;
                         }
                    } else {
-                       console.log(`⏸️ Initial state: Timer paused at ${data.paused_remaining}s`);
                        timeLeft = data.paused_remaining || (25*60);
                    }
                    updateVisuals();
@@ -613,25 +596,39 @@
 
         document.getElementById('loadIdBtn').onclick = () => {
             const id = document.getElementById('syncIdInput').value.trim();
-            if(id) {
-                // Update ID and reload page to force clean sync state
-                window.location.search = `?id=${id}&name=${taskName}`;
-            }
+            if(id) window.location.search = `?id=${id}&name=${taskName}`;
         };
 
         document.getElementById('copyIdBtn').onclick = () => {
-            // Copy the full URL with ID
             const url = `${window.location.origin}${window.location.pathname}?id=${userId}`;
             navigator.clipboard.writeText(url);
-            alert('Link copied! Open this on your other device.');
+            alert('Link copied!');
         };
+        
+        // --- MANIFEST INJECTION FOR ANDROID ---
+        // Dynamically creates a manifest so it is installable on Android too
+        const manifest = {
+            "name": "Focus Timer",
+            "short_name": "Focus",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#262626",
+            "theme_color": "#262626",
+            "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
+        };
+        const stringManifest = JSON.stringify(manifest);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
 
         // --- INIT ---
         drawDial();
         updateVisuals();
         initSync();
 
-        // Auto-Start URL Logic
         setTimeout(() => {
             if (params.get('action') === 'start' && !isRunning) {
                 startTimer();
