@@ -102,11 +102,15 @@
         .timer-container:active { cursor: grabbing; }
         body.is-running .timer-container { cursor: default; }
 
-        .dial-colors {
+       .dial-colors {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(
-                #9059FF 0deg 120deg,   #0088FF 120deg 210deg, #50C8C6 210deg 270deg,
-                #FFCD00 270deg 300deg, #FF9F00 300deg 330deg, #FF4C4C 330deg 360deg
+                #9059FF 0deg 90deg,    /* Purple: 0-25m */
+                #0088FF 90deg 180deg,  /* Blue: 25-30m */
+                #50C8C6 180deg 270deg,  /* Teal: 30-45m */
+                #FFCD00 270deg 300deg,  /* Yellow: 45-50m */
+                #FF9F00 300deg 330deg,  /* Orange: 50-55m */
+                #FF4C4C 330deg 360deg   /* Red: 55-60m */
             );
         }
 
