@@ -127,7 +127,7 @@
                 #50C8C6 180deg 270deg,   /* Teal: 15-30m (Bottom Left) */
                 #FFCD00 270deg 300deg,   /* Yellow: 10-15m (Left Middle) */
                 #FF9F00 300deg 330deg,   /* Orange: 5-10m (Left Top) */
-                #FF4C4C 330deg 360.5deg  /* Red: 0-5m (Top Left) - 0.5deg overlap fixes glitch */
+                #FF4C4C 330deg 361deg    /* Red: 0-5m (Top Left) - Overlap to close gap */
             );
         }
 
@@ -409,6 +409,22 @@
         document.addEventListener('touchstart', wakeControls);
         document.addEventListener('touchmove', wakeControls);
 
+        if (isElectron && ipcRenderer) {
+            ipcRenderer.on('open-settings', openSettings);
+            ipcRenderer.on('deep-link', (event, url) => {
+                const rawUrl = url.replace('focustimer://', 'http://dummy.com');
+                handleExternalCommand(new URL(rawUrl).searchParams);
+            });
+        }
+        // ALWAYS attach click listener to gear button, even in Electron
+        document.getElementById('webSettingsBtn').onclick = openSettings;
+        
+        // Only run this on web to check params on load
+        if (!isElectron) {
+            handleExternalCommand(new URLSearchParams(window.location.search));
+        }
+
+        // Electron: Listen for menu event
         if (isElectron && ipcRenderer) {
             const alwaysOnTopCheck = document.getElementById('alwaysOnTopCheck');
             const savedAlwaysOnTop = localStorage.getItem('alwaysOnTop') !== 'false'; 
