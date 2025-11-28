@@ -8,9 +8,6 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Focus">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#262626">
     
     <style>
         :root {
@@ -24,93 +21,117 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
 
+        html { height: 100%; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-color);
+            background: var(--bg-color); 
             color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
+            width: 100%; height: 100%; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            zoom: 1; 
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* --- Top Bar --- */
-        .top-bar {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 60px;
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 30px; z-index: 100;
-            margin-top: env(safe-area-inset-top);
+        /* --- ELECTRON OVERRIDES --- */
+        html.is-electron { background: transparent !important; }
+        body.is-electron {
+            background: transparent !important;
+            zoom: 0.45; /* Widget Zoom */
         }
 
-        /* UPDATED: Stacked Title Styles */
-        .app-title {
-            display: flex; 
-            flex-direction: column; /* Stacks items vertically */
-            align-items: center; 
-            justify-content: center;
-            gap: 2px;
-        }
-        .time-text { 
-            font-variant-numeric: tabular-nums; 
-            font-size: 17px; 
-            font-weight: 600; 
-            color: #fff;
-            line-height: 1.1;
-        }
-        .task-name { 
-            color: #888; 
-            font-size: 12px; 
-            font-weight: 400; 
-            line-height: 1.1;
+        .app-wrapper {
+            position: relative;
+            width: 380px; height: 380px;
+            background: transparent;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .settings-container { 
-            position: absolute; right: 30px; top: 50%; transform: translateY(-50%); 
-            display: flex; align-items: center; gap: 20px;
+        /* Dragging Rules */
+        body.is-electron .app-wrapper { -webkit-app-region: drag; }
+        body.is-electron .drag-knob, 
+        body.is-electron .controls, 
+        body.is-electron .corner-btn, 
+        body.is-electron .modal, 
+        body.is-electron input, 
+        body.is-electron button {
+            -webkit-app-region: no-drag;
+        }
+        
+        /* --- CONDITIONAL VISIBILITY --- */
+        .show-in-electron { display: none !important; }
+        .show-in-web { display: none !important; }
+
+        body.is-electron .show-in-electron { display: flex !important; }
+        body.is-web .show-in-web { display: flex !important; }
+
+        /* --- CORNER ICONS (Moved Closer) --- */
+        .corner-btn {
+            position: absolute;
+            top: 25px; /* Moved down closer to circle */
+            padding: 10px; 
+            z-index: 60;
+            cursor: pointer;
+            opacity: 0; 
+            transition: opacity 0.3s ease, transform 0.2s;
+        }
+        
+        /* Show icons when hovering the main wrapper */
+        .app-wrapper:hover .corner-btn { opacity: 0.6; }
+        .corner-btn:hover { opacity: 1 !important; transform: scale(1.1); }
+
+        .btn-left { left: 25px; } /* Moved in */
+        .btn-right { right: 25px; } /* Moved in */
+
+        /* --- UI ELEMENTS --- */
+        .top-bar { display: none; } 
+
+        .controls {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, 90%); 
+            display: flex; align-items: center; gap: 30px; 
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        /* Generic Icon Styles */
-        .svg-icon { 
-            width: 20px; height: 20px; cursor: pointer; 
-            transition: all 0.2s ease;
+        /* Hover Area: Now triggered by hovering the Clock Face specifically */
+        .timer-container:hover .controls {
+            opacity: 1;
         }
-        .svg-icon:hover { opacity: 1; }
 
-        /* Gear Icon (Fill based) */
+        @media (hover: none) {
+            .controls { opacity: 1 !important; }
+            .corner-btn { opacity: 0.6 !important; }
+        }
+        
+        /* Graphics */
+        .svg-icon { width: 24px; height: 24px; }
+        .wake-icon { fill: none; stroke: var(--icon-color); stroke-width: 2.5; }
         .gear-icon { fill: var(--icon-color); }
-        .gear-icon:hover { fill: var(--icon-hover); transform: rotate(90deg); }
 
-        /* Wake Lock Icon (Stroke based) */
-        .wake-icon { 
-            fill: none; 
-            stroke: var(--icon-color); 
-            stroke-width: 2;
-        }
-        .wake-icon:hover { stroke: var(--icon-hover); }
-
-        /* --- Timer Wheel --- */
+        /* --- TIMER DIAL --- */
         .timer-container {
-            position: relative; width: 360px; height: 360px;
+            position: relative; width: 340px; height: 340px; 
             display: flex; justify-content: center; align-items: center;
-            cursor: grab; margin-top: 10px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6); 
+            -webkit-app-region: drag; 
         }
-        .timer-container:active { cursor: grabbing; }
         body.is-running .timer-container { cursor: default; }
 
-       .dial-colors {
+        .dial-colors {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(
-                #9059FF 0deg 90deg,    /* Purple: 0-25m */
-                #0088FF 90deg 180deg,  /* Blue: 25-30m */
-                #50C8C6 180deg 270deg,  /* Teal: 30-45m */
-                #FFCD00 270deg 300deg,  /* Yellow: 45-50m */
-                #FF9F00 300deg 330deg,  /* Orange: 50-55m */
-                #FF4C4C 330deg 360deg   /* Red: 55-60m */
+                #9059FF 0deg 90deg,    /* Purple */
+                #0088FF 90deg 180deg,  /* Blue */
+                #50C8C6 180deg 270deg,  /* Teal */
+                #FFCD00 270deg 300deg,  /* Yellow */
+                #FF9F00 300deg 330deg,  /* Orange */
+                #FF4C4C 330deg 360deg   /* Red */
             );
         }
 
@@ -124,258 +145,259 @@
         }
 
         .dial-overlay { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-
-        .tick {
-            position: absolute; background: var(--tick-color); width: 2px; height: 12px;
-            left: 50%; top: 0; transform-origin: 50% 180px;
-        }
+        .tick { position: absolute; background: var(--tick-color); width: 2px; height: 12px; left: 50%; top: 0; transform-origin: 50% 170px; } 
         .tick.major { background: rgba(255, 255, 255, 0.5); width: 3px; height: 20px; }
-
+        
         .number {
-            position: absolute; font-size: 18px; font-weight: 600;
-            color: rgba(255,255,255,0.9); text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            position: absolute; 
+            font-size: 14px; 
+            font-weight: 600;
+            color: rgba(255,255,255,0.6); 
+            text-shadow: none;
             transform: translate(-50%, -50%); width: 40px; text-align: center;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
+        .number.active {
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
+        /* --- THIN POINTER --- */
         .pointer-container {
             position: absolute; width: 100%; height: 100%; z-index: 10;
-            transform: rotate(var(--angle, 0deg)); transition: transform 0.1s linear; pointer-events: none;
+            transform: rotate(var(--angle, 0deg)); 
+            pointer-events: none;
+            will-change: transform;
         }
-
+        
         .pointer-arm {
-            position: absolute; left: calc(50% - 7px); bottom: 50%;
-            width: 14px; height: 165px; background: #fff;
-            border-radius: 8px 8px 0 0; box-shadow: 0 0 10px rgba(0,0,0,0.5); transform-origin: bottom center;
+            position: absolute; 
+            left: 50%; bottom: 50%;
+            width: 4px; /* Thin line */
+            height: 160px; 
+            background: #fff;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
+        /* --- VISIBLE KNOB (Small & Elegant) --- */
         .drag-knob {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 24px; height: 24px; background: linear-gradient(to bottom, #ffffff, #dddddd);
-            border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            z-index: 11; pointer-events: auto; cursor: grab; transition: opacity 0.3s ease, transform 0.2s;
+            position: absolute; 
+            top: 0; /* Align perfectly with tip */
+            left: 50%; transform: translate(-50%, -50%); /* Centered on the tip */
+            width: 12px; height: 12px; /* Small visual dot */
+            background: #fff;
+            border-radius: 50%; 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            z-index: 11; 
+            pointer-events: auto; 
+            cursor: grab;
         }
-        .drag-knob:hover { transform: translateX(-50%) scale(1.1); }
-        .drag-knob:active { cursor: grabbing; }
+        
+        /* --- INVISIBLE HIT AREA (Easy Grabbing) --- */
+        .drag-knob::before {
+            content: '';
+            position: absolute;
+            top: -20px; bottom: -20px; left: -20px; right: -20px; /* Large hit zone */
+            border-radius: 50%;
+            cursor: grab;
+        }
+
         body.is-running .drag-knob { opacity: 0; pointer-events: none; }
-
+        
         .center-dot {
-            position: absolute; width: 12px; height: 12px;
-            background: var(--bg-color); border: 3px solid #fff; border-radius: 50%; z-index: 12;
+            position: absolute; width: 14px; height: 14px;
+            background: #262626; border: 3px solid #fff; border-radius: 50%; z-index: 12;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* --- Controls --- */
-        .controls {
-            position: fixed; bottom: 60px; display: flex; align-items: center; gap: 50px; z-index: 100;
-            margin-bottom: env(safe-area-inset-bottom);
-        }
-        .control-btn {
-            background: none; border: none; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; opacity: 0.7; transition: opacity 0.2s;
-        }
+        .control-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: opacity 0.2s; }
         .control-icon { fill: #888; transition: fill 0.2s; }
-        .control-btn:hover { opacity: 1; }
-        .control-btn:hover .control-icon { fill: #fff; }
-        .control-btn.play .control-icon { width: 28px; height: 28px; fill: #bbb; }
-        .control-btn.play:hover .control-icon { fill: #fff; }
+        .control-btn:hover { opacity: 1; } .control-btn:hover .control-icon { fill: #fff; }
+        .control-btn.play .control-icon { width: 38px; height: 38px; fill: #ccc; }
 
-        /* --- Modal --- */
-        .modal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            z-index: 1000; align-items: center; justify-content: center;
-        }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; border-radius: 50%; }
         .modal.active { display: flex; }
-        .modal-box {
-            background: #333; padding: 25px; border-radius: 12px; width: 300px;
-            text-align: center; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .modal-box h3 { color: #fff; margin-bottom: 15px; font-weight: 500; font-size: 18px;}
-        .modal-box input {
-            width: 100%; padding: 10px; margin: 10px 0 20px 0;
-            background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; font-size: 14px;
-        }
-        .modal-box input:focus { outline: none; border-color: #666; }
-        .modal-actions { display: flex; gap: 10px; justify-content: center; }
-        .modal-btn {
-            padding: 8px 16px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
-        }
-        .modal-btn:hover { background: #555; }
+        .modal-box { background: #333; padding: 25px; border-radius: 12px; width: 280px; text-align: center; border: 1px solid #444; }
+        .modal-box h3 { color: #fff; margin-bottom: 15px; }
+        .modal-box input[type="text"] { width: 100%; padding: 8px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; }
+        .modal-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .modal-btn { padding: 6px 12px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
         .modal-btn.primary { background: #0088FF; }
-        .modal-btn.primary:hover { background: #0077EE; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="app-title">
-            <span class="time-text" id="headerTime">25:00</span>
-            <span class="task-name" id="taskNameDisplay">Pomodoro</span>
+    <div class="app-wrapper">
+
+        <!-- Left Corner: Wake Lock -->
+        <div class="corner-btn btn-left" id="wakeLockBtn">
+            <svg class="svg-icon wake-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /></svg>
         </div>
-        
-        <div class="settings-container">
-            <svg class="svg-icon wake-icon" id="wakeLockBtn" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" />
-            </svg>
-            
-            <svg class="svg-icon gear-icon" id="settingsBtn" viewBox="0 0 24 24">
+
+        <!-- Right Corner: Settings -->
+        <div class="corner-btn btn-right" id="webSettingsBtn">
+            <svg class="svg-icon gear-icon" viewBox="0 0 24 24">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
             </svg>
         </div>
-    </div>
 
-    <div class="timer-container" id="timerContainer">
-        <div class="dial-colors"></div>
-        <div class="dial-mask" id="dialMask"></div>
-        <div class="dial-overlay" id="dialOverlay"></div>
-        <div class="pointer-container" id="pointerContainer">
-            <div class="pointer-arm">
-                <div class="drag-knob"></div>
+        <!-- Timer Circle -->
+        <div class="timer-container" id="timerContainer">
+            <div class="dial-colors"></div>
+            <div class="dial-mask" id="dialMask"></div>
+            <div class="dial-overlay" id="dialOverlay"></div>
+            
+            <div class="pointer-container" id="pointerContainer">
+                <div class="pointer-arm"><div class="drag-knob"></div></div>
+            </div>
+            <div class="center-dot"></div>
+            
+            <div class="controls">
+                <button class="control-btn" id="resetBtn">
+                    <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+                </button>
+                <button class="control-btn play" id="playPauseBtn">
+                    <svg class="control-icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="control-btn" id="addTimeBtn">
+                    <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                </button>
             </div>
         </div>
-        <div class="center-dot"></div>
-    </div>
 
-    <div class="controls">
-        <button class="control-btn">
-            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
-        </button>
-        <button class="control-btn play" id="playPauseBtn">
-            <svg class="control-icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button class="control-btn">
-            <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
-        </button>
-    </div>
-
-    <div class="modal" id="settingsModal">
-        <div class="modal-box">
-            <h3>Sync ID</h3>
-            <input type="text" id="syncIdInput" placeholder="e.g. my-timer">
-            <div class="modal-actions">
-                <button class="modal-btn" id="copyIdBtn">Copy URL</button>
-                <button class="modal-btn primary" id="loadIdBtn">Save</button>
-                <button class="modal-btn" id="closeModal">Close</button>
+        <div class="modal" id="settingsModal">
+            <div class="modal-box">
+                <h3>Settings</h3>
+                <div class="show-in-electron" style="display:none; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                    <input type="checkbox" id="alwaysOnTopCheck" style="accent-color: #0088FF; transform: scale(1.2); cursor: pointer;">
+                    <label for="alwaysOnTopCheck" style="color: #fff; font-size: 14px; cursor: pointer;">Always on Top</label>
+                </div>
+                <div class="show-in-web" style="display:none; margin-bottom: 20px;">
+                    <button class="modal-btn primary" id="openAppBtn" style="width:100%;">Open Desktop App</button>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #444; margin-bottom: 15px;">
+                <label style="display: block; text-align: left; color: #aaa; font-size: 12px; margin-bottom: 5px;">Sync ID</label>
+                <input type="text" id="syncIdInput" placeholder="e.g. my-timer">
+                <div class="modal-actions">
+                    <button class="modal-btn" id="copyIdBtn">Copy</button>
+                    <button class="modal-btn primary" id="loadIdBtn">Save</button>
+                    <button class="modal-btn" id="closeModal">Close</button>
+                </div>
             </div>
         </div>
+    
     </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+        
+        if (isElectron) {
+            document.body.classList.add('is-electron');
+            document.documentElement.classList.add('is-electron');
+        } else {
+            document.body.classList.add('is-web');
+        }
+
+        // FIXED: Only require electron inside the check
+        let ipcRenderer = null;
+        if (isElectron) {
+            try {
+                // We use window.require to avoid build tools transpiling this
+                const electron = window.require('electron');
+                ipcRenderer = electron.ipcRenderer;
+            } catch (e) { console.warn('Electron detected but require failed'); }
+        }
 
         const SUPABASE_URL = 'https://oqdaxvlotnkdrqbrpvhp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xZGF4dmxvdG5rZHJxYnJwdmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MTI0NDUsImV4cCI6MjA3OTE4ODQ0NX0.ZlqSUzCQJSieJPRMA5kwrcsJWCrBAJMSYz8KEW4Zuz8';
-
         let supabase = null;
-        try {
-            supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch(e) { console.error("Supabase Init Error", e); }
+        try { supabase = createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error("Supabase Init Error", e); }
 
-        // --- VARIABLES ---
-        let timeLeft = 25 * 60;
-        let isRunning = false;
-        let isDragging = false;
-        let animationFrame = null;
-        
-        // --- WAKE LOCK START ---
-        let wakeLock = null;
-        let isWakeLockEnabled = false; // Default to OFF
+        let timeLeft = 25 * 60; let isRunning = false; let isDragging = false; let animationFrame = null;
+        let lastLocalInteraction = 0; 
 
-        const wakeLockBtn = document.getElementById('wakeLockBtn');
-        
-        function updateWakeLockIcon() {
-            if (isWakeLockEnabled) {
-                // Solid circle (ON)
-                wakeLockBtn.style.strokeDasharray = 'none';
-                wakeLockBtn.style.opacity = '1';
-                // Add fill for extra visibility if desired, or keep outline
-            } else {
-                // Dotted circle (OFF)
-                wakeLockBtn.style.strokeDasharray = '4 4';
-                wakeLockBtn.style.opacity = '0.5';
-            }
+        if (isElectron && ipcRenderer) {
+            const alwaysOnTopCheck = document.getElementById('alwaysOnTopCheck');
+            const savedAlwaysOnTop = localStorage.getItem('alwaysOnTop') !== 'false'; 
+            alwaysOnTopCheck.checked = savedAlwaysOnTop;
+            ipcRenderer.send('set-always-on-top', savedAlwaysOnTop);
+
+            alwaysOnTopCheck.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                localStorage.setItem('alwaysOnTop', isChecked);
+                ipcRenderer.send('set-always-on-top', isChecked);
+            });
         }
 
-        // Initialize Icon
+        if (!isElectron) {
+            document.getElementById('openAppBtn').onclick = () => {
+                const id = localStorage.getItem('userId') || 'default';
+                const currentParams = new URLSearchParams(window.location.search);
+                currentParams.set('id', id); 
+                window.location.href = `focustimer://?${currentParams.toString()}`;
+            };
+        }
+
+        let wakeLock = null; let isWakeLockEnabled = false;
+        const wakeLockBtn = document.getElementById('wakeLockBtn');
+        wakeLockBtn.addEventListener('click', async () => {
+            isWakeLockEnabled = !isWakeLockEnabled; 
+            updateWakeLockIcon();
+            if (isWakeLockEnabled) { await requestWakeLock(); } else { await releaseWakeLock(); }
+        });
+
+        function updateWakeLockIcon() {
+            const icon = wakeLockBtn.querySelector('svg');
+            if(icon) {
+               icon.style.strokeDasharray = isWakeLockEnabled ? 'none' : '4 4';
+               icon.style.opacity = isWakeLockEnabled ? '1' : '0.5';
+               icon.style.fill = isWakeLockEnabled ? 'rgba(255,255,255,0.1)' : 'none';
+            }
+        }
         updateWakeLockIcon();
 
-        // Toggle Logic
-        wakeLockBtn.addEventListener('click', async () => {
-            isWakeLockEnabled = !isWakeLockEnabled;
-            updateWakeLockIcon();
-            console.log("Keep Screen On:", isWakeLockEnabled);
-            
-            if (isWakeLockEnabled) {
-                await requestWakeLock();
-            } else {
-                await releaseWakeLock();
-            }
-        });
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) { if (isWakeLockEnabled) { isWakeLockEnabled = false; updateWakeLockIcon(); } } }
+        async function releaseWakeLock() { if (wakeLock !== null) { try { await wakeLock.release(); wakeLock = null; } catch (e) {} } }
+        document.addEventListener('visibilitychange', async () => { if (isWakeLockEnabled && document.visibilityState === 'visible') { await requestWakeLock(); } });
 
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('💡 Screen Wake Lock active');
-                }
-            } catch (err) {
-                console.error(`Wake Lock Error: ${err.name}, ${err.message}`);
-                // If it fails (e.g. no gesture), toggle UI back to off to reflect reality
-                if (isWakeLockEnabled) {
-                     isWakeLockEnabled = false;
-                     updateWakeLockIcon();
-                }
-            }
-        }
-
-        async function releaseWakeLock() {
-            if (wakeLock !== null) {
-                try {
-                    await wakeLock.release();
-                    wakeLock = null;
-                    console.log('💡 Screen Wake Lock released');
-                } catch (e) { console.error('Wake Lock Release Error', e); }
-            }
-        }
-
-        // Re-acquire lock if user switches tabs and comes back
-        document.addEventListener('visibilitychange', async () => {
-            // If the user wants the lock enabled, and the page is visible, try to get it
-            if (isWakeLockEnabled && document.visibilityState === 'visible') {
-                await requestWakeLock();
-            }
-        });
-        // --- WAKE LOCK END ---
-
-        // Sync Data
         let endTime = 0;
-        let lastSyncedDuration = 25 * 60;
-
-        // Sounds
         const startSound = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3'); 
         const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/608/608-preview.mp3');
-
-        // --- ID & URL Management ---
         const params = new URLSearchParams(window.location.search);
-        let userId = params.get('id') || localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
-
+        let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
         localStorage.setItem('userId', userId);
-
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
-        console.log("🔑 Session ID:", sessionId);
-
         const taskName = params.get('name') || 'Pomodoro';
-        document.getElementById('taskNameDisplay').innerText = taskName;
         document.title = taskName + " Focus";
 
-        // DOM Elements
         const container = document.getElementById('timerContainer');
-        const headerTime = document.getElementById('headerTime');
         const playBtn = document.getElementById('playPauseBtn');
         const playIconPath = document.querySelector('#playIcon path');
+        
+        document.getElementById('resetBtn').addEventListener('click', () => { 
+            lastLocalInteraction = Date.now();
+            if(isRunning) stopTimer(); 
+            timeLeft = 25 * 60; 
+            updateVisuals(); 
+            syncToSupabase(); 
+        });
+        document.getElementById('addTimeBtn').addEventListener('click', () => { 
+            lastLocalInteraction = Date.now();
+            timeLeft += 60; 
+            if(timeLeft > 3600) timeLeft = 3600; 
+            if(isRunning) endTime = Date.now() + (timeLeft * 1000); 
+            updateVisuals(); 
+            syncToSupabase(); 
+        });
 
-        // --- GRAPHICS ---
         function drawDial() {
             const overlay = document.getElementById('dialOverlay');
-            const radius = 180;
+            const radius = 170; // Adjusted for smaller container
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick major' : 'tick';
@@ -385,50 +407,47 @@
                     const num = document.createElement('div');
                     num.className = 'number';
                     num.innerText = i === 0 ? "60'" : i;
+                    num.dataset.num = i === 0 ? 60 : i; 
                     const angleDeg = -90 - (i * 6);
                     const angleRad = angleDeg * (Math.PI / 180);
-                    const dist = 150;
+                    const dist = 140; // Adjusted distance
                     const x = 50 + (dist/radius * 50) * Math.cos(angleRad);
                     const y = 50 + (dist/radius * 50) * Math.sin(angleRad);
-                    num.style.left = x + '%';
-                    num.style.top = y + '%';
+                    num.style.left = x + '%'; num.style.top = y + '%';
                     overlay.appendChild(num);
                 }
             }
         }
-
         function formatTime(seconds) {
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = (seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
         }
-
         function updateVisuals() {
-            headerTime.innerText = formatTime(timeLeft);
             const minutes = timeLeft / 60;
             const cwDegrees = (360 - (minutes * 6)) % 360;
-
             const pointer = document.getElementById('pointerContainer');
             pointer.style.setProperty('--angle', `${cwDegrees}deg`);
-
             const mask = document.getElementById('dialMask');
-            mask.style.background = `conic-gradient(
-                var(--bg-color) 0deg,
-                var(--bg-color) ${cwDegrees}deg,
-                transparent ${cwDegrees}deg,
-                transparent 360deg
-            )`;
+            mask.style.background = `conic-gradient(var(--bg-color) 0deg, var(--bg-color) ${cwDegrees}deg, transparent ${cwDegrees}deg, transparent 360deg)`;
+            
+            document.querySelectorAll('.number').forEach(num => {
+                const val = parseInt(num.dataset.num);
+                if (val <= minutes + 0.1) {
+                    num.classList.add('active');
+                } else {
+                    num.classList.remove('active');
+                }
+            });
         }
 
-        // --- DRAGGING LOGIC ---
         function getMinutesFromEvent(e) {
             const rect = container.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const x = clientX - centerX;
-            const y = clientY - centerY;
+            const x = clientX - centerX; const y = clientY - centerY;
             let angleDeg = Math.atan2(y, x) * (180 / Math.PI);
             let cwAngle = angleDeg + 90;
             if (cwAngle < 0) cwAngle += 360;
@@ -436,226 +455,177 @@
             if (minutes >= 59.5) minutes = 0;
             return Math.max(0, Math.min(60, Math.round(minutes)));
         }
-
-        function handleStart(e) {
-            if (isRunning) return;
-            isDragging = true;
-            let m = getMinutesFromEvent(e);
-            if(m === 0) m = 60;
-            timeLeft = m * 60;
-            updateVisuals();
+        function handleStart(e) { 
+            if (isRunning) return; 
+            isDragging = true; 
+            lastLocalInteraction = Date.now();
+            let m = getMinutesFromEvent(e); 
+            if(m === 0) m = 60; 
+            timeLeft = m * 60; 
+            updateVisuals(); 
         }
-
-        function handleMove(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            let m = getMinutesFromEvent(e);
-            if(m === 0) m = 60;
-            timeLeft = m * 60;
-            updateVisuals();
+        function handleMove(e) { 
+            if (!isDragging) return; 
+            e.preventDefault(); 
+            lastLocalInteraction = Date.now();
+            let m = getMinutesFromEvent(e); 
+            if(m === 0) m = 60; 
+            timeLeft = m * 60; 
+            updateVisuals(); 
         }
-
-        function handleEnd() {
-            if (isDragging) {
-                isDragging = false;
-                syncToSupabase();
-            }
+        function handleEnd() { 
+            if (isDragging) { 
+                isDragging = false; 
+                lastLocalInteraction = Date.now();
+                syncToSupabase(); 
+            } 
         }
-
-        container.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-        container.addEventListener('touchstart', handleStart);
-        window.addEventListener('touchmove', handleMove);
+        
+        // INTERACTION FIX: Attach to knob only
+        const dragKnob = document.querySelector('.drag-knob');
+        dragKnob.addEventListener('mousedown', handleStart); 
+        dragKnob.addEventListener('touchstart', handleStart); 
+        window.addEventListener('mousemove', handleMove); 
+        window.addEventListener('mouseup', handleEnd); 
+        window.addEventListener('touchmove', handleMove); 
         window.addEventListener('touchend', handleEnd);
-
-        // --- TIMER LOGIC (TIMESTAMP BASED) ---
 
         function tick() {
             if (!isRunning) return;
-
             const now = Date.now();
             const remaining = Math.ceil((endTime - now) / 1000);
-
-            if (remaining <= 0) {
-                timeLeft = 0;
-                stopTimer();
-                alarmSound.play().catch(e => console.log("Audio error", e));
-            } else {
-                if (remaining !== timeLeft) {
-                    timeLeft = remaining;
-                    updateVisuals();
-                }
-                animationFrame = requestAnimationFrame(tick);
-            }
+            if (remaining <= 0) { timeLeft = 0; stopTimer(); alarmSound.play().catch(e => console.log("Audio error", e)); } 
+            else { if (remaining !== timeLeft) { timeLeft = remaining; updateVisuals(); } animationFrame = requestAnimationFrame(tick); }
         }
-
-        function startTimer() {
-            if (isRunning) return;
-            if (timeLeft <= 0) timeLeft = 25 * 60;
-
-            endTime = Date.now() + (timeLeft * 1000);
-            isRunning = true;
-
-            document.body.classList.add('is-running');
+        function startTimer() { 
+            if (isRunning) return; 
+            if (timeLeft <= 0) timeLeft = 25 * 60; 
+            endTime = Date.now() + (timeLeft * 1000); 
+            isRunning = true; 
+            lastLocalInteraction = Date.now();
+            document.body.classList.add('is-running'); 
             playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); 
-
-            startSound.currentTime = 0;
-            startSound.play().catch(e => console.log("Audio error", e));
-
-            // No wake lock logic here (handled by button)
-
-            tick();
-            syncToSupabase();
+            startSound.currentTime = 0; startSound.play().catch(e => console.log("Audio error", e)); 
+            tick(); 
+            syncToSupabase(); 
         }
-
-        function stopTimer() {
-            isRunning = false;
-            cancelAnimationFrame(animationFrame);
-
-            document.body.classList.remove('is-running');
+        function stopTimer() { 
+            isRunning = false; 
+            lastLocalInteraction = Date.now();
+            cancelAnimationFrame(animationFrame); 
+            document.body.classList.remove('is-running'); 
             playIconPath.setAttribute('d', 'M8 5v14l11-7z'); 
-
-            // No wake lock logic here (handled by button)
-
-            syncToSupabase();
+            syncToSupabase(); 
         }
+        playBtn.addEventListener('click', () => isRunning ? stopTimer() : startTimer());
 
-        function toggleTimer() {
-            isRunning ? stopTimer() : startTimer();
-        }
-
-        playBtn.addEventListener('click', toggleTimer);
-
-        // --- SUPABASE SYNC ---
         async function syncToSupabase() {
             if(!supabase) return;
-            const payload = {
-                id: userId,
-                end_time: isRunning ? endTime : null,
-                is_running: isRunning,
-                paused_remaining: isRunning ? null : timeLeft,
-                task_name: taskName,
-                session_id: sessionId,
-                updated_at: Date.now()
-            };
-            try {
-                await supabase.from('timers').upsert(payload);
-            } catch(err) { console.error("Sync error", err); }
+            const payload = { id: userId, end_time: isRunning ? endTime : null, is_running: isRunning, paused_remaining: isRunning ? null : timeLeft, task_name: "Timer", session_id: sessionId, updated_at: Date.now() };
+            try { await supabase.from('timers').upsert(payload); } catch(err) { console.error("Sync error", err); }
         }
-
         function initSync() {
             if(!supabase) return;
-
-            const channel = supabase.channel('timer-sync-' + userId)
-                .on('postgres_changes', {
-                    event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}`
-                }, payload => {
+            const channel = supabase.channel('timer-sync-' + userId).on('postgres_changes', { event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}` }, payload => {
                     const data = payload.new;
                     if (data.session_id === sessionId) return;
+                    
+                    // CONFLICT RESOLUTION
+                    if (Date.now() - lastLocalInteraction < 2500) return;
 
                     if (data.is_running) {
                         const now = Date.now();
                         const secondsLeft = Math.ceil((data.end_time - now) / 1000);
                         if (secondsLeft > 0) {
-                            endTime = data.end_time;
-                            timeLeft = secondsLeft;
-                            if (!isRunning) {
-                                isRunning = true;
-                                document.body.classList.add('is-running');
-                                playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                                tick();
-                            }
-                        } else {
-                            timeLeft = 0;
-                            if(isRunning) stopTimer();
-                        }
+                            endTime = data.end_time; timeLeft = secondsLeft;
+                            if (!isRunning) { isRunning = true; document.body.classList.add('is-running'); playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); tick(); }
+                        } else { timeLeft = 0; if(isRunning) stopTimer(); }
                     } else {
                         if (isRunning) stopTimer();
-                        if (!isDragging && Math.abs(timeLeft - data.paused_remaining) > 1) {
-                            timeLeft = data.paused_remaining || (25*60);
-                        }
+                        if (!isDragging && Math.abs(timeLeft - data.paused_remaining) > 1) { timeLeft = data.paused_remaining || (25*60); }
                     }
                     updateVisuals();
-                })
-                .subscribe();
-
+                }).subscribe();
             supabase.from('timers').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
                 if(!error && data) {
-                   if(data.task_name && !params.get('name')) {
-                       document.getElementById('taskNameDisplay').innerText = data.task_name;
-                       document.title = data.task_name + " Focus";
-                   }
                    if (data.is_running) {
                        const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
-                       if (secondsLeft > 0) {
-                           endTime = data.end_time;
-                           timeLeft = secondsLeft;
-                           if (!isRunning) {
-                               isRunning=true;
-                               document.body.classList.add('is-running');
-                               playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-                               tick();
-                           }
-                       } else {
-                           timeLeft = 0;
-                       }
-                   } else {
-                       timeLeft = data.paused_remaining || (25*60);
-                   }
+                       if (secondsLeft > 0) { endTime = data.end_time; timeLeft = secondsLeft; if (!isRunning) { isRunning=true; document.body.classList.add('is-running'); playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); tick(); } } else { timeLeft = 0; }
+                   } else { timeLeft = data.paused_remaining || (25*60); }
                    updateVisuals();
                 }
             });
         }
 
-        // --- MODAL ---
         const modal = document.getElementById('settingsModal');
-        document.getElementById('settingsBtn').onclick = () => {
-            document.getElementById('syncIdInput').value = userId;
-            modal.classList.add('active');
-        };
-        document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
-
-        document.getElementById('loadIdBtn').onclick = () => {
-            const id = document.getElementById('syncIdInput').value.trim();
-            if(id) window.location.search = `?id=${id}&name=${taskName}`;
-        };
-
-        document.getElementById('copyIdBtn').onclick = () => {
-            const url = `${window.location.origin}${window.location.pathname}?id=${userId}`;
-            navigator.clipboard.writeText(url);
-            alert('Link copied!');
-        };
         
-        // --- MANIFEST INJECTION FOR ANDROID ---
-        const manifest = {
-            "name": "Focus Timer",
-            "short_name": "Focus",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#262626",
-            "theme_color": "#262626",
-            "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
-        };
-        const stringManifest = JSON.stringify(manifest);
-        const blob = new Blob([stringManifest], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = manifestURL;
-        document.head.appendChild(link);
+        function openSettings() {
+            document.getElementById('syncIdInput').value = localStorage.getItem('userId') || '';
+            modal.classList.add('active');
+        }
 
-        // --- INIT ---
-        drawDial();
-        updateVisuals();
-        initSync();
+        function handleExternalCommand(urlParams) {
+            const newId = urlParams.get('id');
+            const newAction = urlParams.get('action');
+            const newDuration = urlParams.get('duration');
 
-        setTimeout(() => {
-            if (params.get('action') === 'start' && !isRunning) {
-                startTimer();
+            let needsUpdate = false;
+
+            if (newId && newId !== localStorage.getItem('userId')) {
+                localStorage.setItem('userId', newId);
+                userId = newId; 
+                needsUpdate = true;
+                if(supabase) supabase.removeAllChannels();
+                initSync();
             }
-        }, 500);
 
+            if (newDuration) {
+                const minutes = parseInt(newDuration);
+                if (!isNaN(minutes) && minutes > 0) {
+                    timeLeft = minutes * 60;
+                    lastLocalInteraction = Date.now();
+                    needsUpdate = true;
+                }
+            }
+
+            if (newAction === 'start') {
+                if (!isRunning) {
+                    setTimeout(() => startTimer(), 500); 
+                    needsUpdate = false; 
+                } else if (needsUpdate) {
+                    syncToSupabase(); 
+                    updateVisuals();
+                }
+            } else if (needsUpdate) {
+                updateVisuals();
+                syncToSupabase();
+            }
+        }
+
+        if (isElectron && ipcRenderer) {
+            ipcRenderer.on('open-settings', openSettings);
+            ipcRenderer.on('deep-link', (event, url) => {
+                const rawUrl = url.replace('focustimer://', 'http://dummy.com');
+                handleExternalCommand(new URL(rawUrl).searchParams);
+            });
+        } else {
+            document.getElementById('webSettingsBtn').onclick = openSettings;
+            handleExternalCommand(new URLSearchParams(window.location.search));
+        }
+
+        document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
+        document.getElementById('loadIdBtn').onclick = () => { 
+            const id = document.getElementById('syncIdInput').value.trim(); 
+            if(id) { 
+                localStorage.setItem('userId', id); 
+                userId = id; 
+                if(isElectron) location.reload(); else { if(supabase) supabase.removeAllChannels(); initSync(); }
+                modal.classList.remove('active');
+            } 
+        };
+        document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(`ID: ${userId}`); alert('ID copied to clipboard!'); };
+        
+        drawDial(); updateVisuals(); initSync();
     </script>
 </body>
 </html>
