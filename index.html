@@ -122,12 +122,12 @@
         .dial-colors {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(
-                #9059FF 0deg 90deg,      /* Purple */
-                #0088FF 90deg 180deg,    /* Blue */
-                #50C8C6 180deg 270deg,   /* Teal */
-                #FFCD00 270deg 300deg,   /* Yellow */
-                #FF9F00 300deg 330deg,   /* Orange */
-                #FF4C4C 330deg 361deg    /* Red */
+                #9059FF 0deg 90deg,      /* Purple: 45-60m */
+                #0088FF 90deg 180deg,    /* Blue: 30-45m */
+                #50C8C6 180deg 270deg,   /* Teal: 15-30m */
+                #FFCD00 270deg 300deg,   /* Yellow: 10-15m */
+                #FF9F00 300deg 330deg,   /* Orange: 5-10m */
+                #FF4C4C 330deg 361deg    /* Red: 0-5m (Overlap to fix gap) */
             );
         }
 
@@ -141,6 +141,7 @@
         }
 
         .dial-overlay { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+        /* Ticks aligned to 0 at top, increasing counter-clockwise */
         .tick { position: absolute; background: var(--tick-color); width: 2px; height: 12px; left: calc(50% - 1px); top: 0; transform-origin: 50% 170px; } 
         .tick.major { background: rgba(255, 255, 255, 0.5); width: 3px; height: 20px; left: calc(50% - 1.5px); }
         
@@ -158,40 +159,37 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* --- REFINED POINTER (Thicker & Tapered) --- */
+        /* --- TAPERED POINTER --- */
         .pointer-container {
             position: absolute; width: 100%; height: 100%; z-index: 10;
             transform: rotate(var(--angle, 0deg)); 
             pointer-events: none;
             will-change: transform;
-            /* Apply drop-shadow filter here so it works on the clip-path child */
             filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
         }
         
-        /* Container for the arm parts */
         .pointer-arm {
             position: absolute; 
             left: 50%; bottom: 50%;
-            width: 8px; /* Thicker Base (8px) for anti-aliasing */
+            width: 8px; /* Wide Base */
             height: 160px; 
             transform: translateX(-50%);
             transform-origin: bottom center;
-            /* Removed background/shadow here, handled by children */
         }
 
-        /* The Blade (Tapered from 8px to 2px) */
+        /* Blade */
         .pointer-arm::before {
             content: '';
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: #fff;
-            /* Taper: Top is 2px wide (37.5% to 62.5%), Bottom is 8px wide (0% to 100%) */
+            /* Taper from 8px bottom to 2px top */
             clip-path: polygon(37.5% 0, 62.5% 0, 100% 100%, 0% 100%);
-            border-radius: 2px; /* Smooth corners */
+            border-radius: 2px;
         }
 
-        /* The Counterweight (Tail) */
+        /* Tail */
         .pointer-arm::after {
             content: '';
             position: absolute;
@@ -206,7 +204,6 @@
             width: 28px; height: 28px; 
             background: #fff;
             border-radius: 50%; 
-            /* Simple shadow for the knob itself */
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             z-index: 11; pointer-events: auto; cursor: grab;
         }
@@ -252,11 +249,12 @@
         <!-- Timer Circle -->
         <div class="timer-container" id="timerContainer">
             
-            <!-- INNER ICONS -->
-            <div class="inner-icon icon-left" id="wakeLockBtn">
+            <!-- Left Icon: Dual Function (Wake Lock / Always on Top) -->
+            <div class="inner-icon icon-left" id="actionBtn">
                 <svg class="svg-icon wake-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /></svg>
             </div>
             
+            <!-- Right Icon: Settings -->
             <div class="inner-icon icon-right" id="webSettingsBtn">
                 <svg class="svg-icon gear-icon" viewBox="0 0 24 24">
                     <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
@@ -296,11 +294,6 @@
             <div class="modal-box">
                 <h3>Settings</h3>
                 
-                <div class="setting-row show-in-electron" style="display:none;">
-                    <span>Always on Top</span>
-                    <input type="checkbox" id="alwaysOnTopCheck">
-                </div>
-
                 <div class="show-in-web" style="display:none; margin-bottom: 15px;">
                     <button class="modal-btn primary" id="openAppBtn" style="width:100%;">Open Desktop App</button>
                 </div>
@@ -421,22 +414,64 @@
         });
 
         // --- IOS / MOBILE AUDIO UNLOCK ---
-        // Play and immediately pause all sounds on first interaction
-        // to unlock AudioContext on iOS Safari
         function unlockAudio() {
             const sounds = [startSound, alarmSound, tickSound];
             sounds.forEach(s => {
                 s.play().then(() => {
                     s.pause();
                     s.currentTime = 0;
-                }).catch(e => {}); // Ignore error if already unlocked or blocked
+                }).catch(e => {}); 
             });
-            // Remove listeners so it only happens once
             document.removeEventListener('touchstart', unlockAudio);
             document.removeEventListener('click', unlockAudio);
         }
         document.addEventListener('touchstart', unlockAudio);
         document.addEventListener('click', unlockAudio);
+
+        // --- DUAL FUNCTION ACTION BUTTON ---
+        // Left Icon: 
+        //   - Electron: Toggle Always on Top (Default ON)
+        //   - Web: Toggle Wake Lock (Default OFF)
+        
+        const actionBtn = document.getElementById('actionBtn'); // Replaced wakeLockBtn
+        let isActionActive = false;
+
+        // Init State
+        if (isElectron) {
+            isActionActive = localStorage.getItem('alwaysOnTop') !== 'false'; // Default True
+            if (ipcRenderer) ipcRenderer.send('set-always-on-top', isActionActive);
+        } else {
+            isActionActive = false; // Wake Lock Default False
+        }
+        updateActionIcon();
+
+        actionBtn.addEventListener('click', async () => {
+            isActionActive = !isActionActive;
+            updateActionIcon();
+
+            if (isElectron && ipcRenderer) {
+                localStorage.setItem('alwaysOnTop', isActionActive);
+                ipcRenderer.send('set-always-on-top', isActionActive);
+            } else {
+                if (isActionActive) { await requestWakeLock(); } else { await releaseWakeLock(); }
+            }
+        });
+
+        function updateActionIcon() {
+            const icon = actionBtn.querySelector('svg');
+            if(icon) {
+               icon.style.strokeDasharray = isActionActive ? 'none' : '4 4';
+               icon.style.opacity = isActionActive ? '1' : '0.5';
+               icon.style.fill = isActionActive ? 'rgba(255,255,255,0.1)' : 'none';
+            }
+        }
+
+        let wakeLock = null; 
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) { if (isActionActive) { isActionActive = false; updateActionIcon(); } } }
+        async function releaseWakeLock() { if (wakeLock !== null) { try { await wakeLock.release(); wakeLock = null; } catch (e) {} } }
+        document.addEventListener('visibilitychange', async () => { 
+            if (!isElectron && isActionActive && document.visibilityState === 'visible') { await requestWakeLock(); } 
+        });
 
         // --- MOBILE "TAP TO WAKE" LOGIC ---
         let controlsTimeout;
@@ -457,26 +492,11 @@
                 handleExternalCommand(new URL(rawUrl).searchParams);
             });
         }
-        // ALWAYS attach click listener to gear button, even in Electron
+        
         document.getElementById('webSettingsBtn').onclick = openSettings;
         
-        // Only run this on web to check params on load
         if (!isElectron) {
             handleExternalCommand(new URLSearchParams(window.location.search));
-        }
-
-        // Electron: Listen for menu event
-        if (isElectron && ipcRenderer) {
-            const alwaysOnTopCheck = document.getElementById('alwaysOnTopCheck');
-            const savedAlwaysOnTop = localStorage.getItem('alwaysOnTop') !== 'false'; 
-            alwaysOnTopCheck.checked = savedAlwaysOnTop;
-            ipcRenderer.send('set-always-on-top', savedAlwaysOnTop);
-
-            alwaysOnTopCheck.addEventListener('change', (e) => {
-                const isChecked = e.target.checked;
-                localStorage.setItem('alwaysOnTop', isChecked);
-                ipcRenderer.send('set-always-on-top', isChecked);
-            });
         }
 
         if (!isElectron) {
@@ -487,28 +507,6 @@
                 window.location.href = `focustimer://?${currentParams.toString()}`;
             };
         }
-
-        let wakeLock = null; let isWakeLockEnabled = false;
-        const wakeLockBtn = document.getElementById('wakeLockBtn');
-        wakeLockBtn.addEventListener('click', async () => {
-            isWakeLockEnabled = !isWakeLockEnabled; 
-            updateWakeLockIcon();
-            if (isWakeLockEnabled) { await requestWakeLock(); } else { await releaseWakeLock(); }
-        });
-
-        function updateWakeLockIcon() {
-            const icon = wakeLockBtn.querySelector('svg');
-            if(icon) {
-               icon.style.strokeDasharray = isWakeLockEnabled ? 'none' : '4 4';
-               icon.style.opacity = isWakeLockEnabled ? '1' : '0.5';
-               icon.style.fill = isWakeLockEnabled ? 'rgba(255,255,255,0.1)' : 'none';
-            }
-        }
-        updateWakeLockIcon();
-
-        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) { if (isWakeLockEnabled) { isWakeLockEnabled = false; updateWakeLockIcon(); } } }
-        async function releaseWakeLock() { if (wakeLock !== null) { try { await wakeLock.release(); wakeLock = null; } catch (e) {} } }
-        document.addEventListener('visibilitychange', async () => { if (isWakeLockEnabled && document.visibilityState === 'visible') { await requestWakeLock(); } });
 
         const params = new URLSearchParams(window.location.search);
         let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
