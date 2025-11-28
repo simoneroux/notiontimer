@@ -122,12 +122,12 @@
         .dial-colors {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(
-                #9059FF 0deg 90deg,      /* Purple: 45-60m (Top Right) */
-                #0088FF 90deg 180deg,    /* Blue: 30-45m (Bottom Right) */
-                #50C8C6 180deg 270deg,   /* Teal: 15-30m (Bottom Left) */
-                #FFCD00 270deg 300deg,   /* Yellow: 10-15m (Left Middle) */
-                #FF9F00 300deg 330deg,   /* Orange: 5-10m (Left Top) */
-                #FF4C4C 330deg 361deg    /* Red: 0-5m (Top Left) - Overlap to close gap */
+                #9059FF 0deg 90deg,      /* Purple */
+                #0088FF 90deg 180deg,    /* Blue */
+                #50C8C6 180deg 270deg,   /* Teal */
+                #FFCD00 270deg 300deg,   /* Yellow */
+                #FF9F00 300deg 330deg,   /* Orange */
+                #FF4C4C 330deg 361deg    /* Red */
             );
         }
 
@@ -141,7 +141,6 @@
         }
 
         .dial-overlay { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-        /* Ticks aligned to 0 at top, increasing counter-clockwise */
         .tick { position: absolute; background: var(--tick-color); width: 2px; height: 12px; left: calc(50% - 1px); top: 0; transform-origin: 50% 170px; } 
         .tick.major { background: rgba(255, 255, 255, 0.5); width: 3px; height: 20px; left: calc(50% - 1.5px); }
         
@@ -159,24 +158,47 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* --- THIN POINTER --- */
+        /* --- REFINED POINTER (Thicker & Tapered) --- */
         .pointer-container {
             position: absolute; width: 100%; height: 100%; z-index: 10;
             transform: rotate(var(--angle, 0deg)); 
             pointer-events: none;
             will-change: transform;
+            /* Apply drop-shadow filter here so it works on the clip-path child */
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
         }
         
+        /* Container for the arm parts */
         .pointer-arm {
             position: absolute; 
             left: 50%; bottom: 50%;
-            width: 4px; 
+            width: 8px; /* Thicker Base (8px) for anti-aliasing */
             height: 160px; 
-            background: #fff;
             transform: translateX(-50%);
             transform-origin: bottom center;
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            /* Removed background/shadow here, handled by children */
+        }
+
+        /* The Blade (Tapered from 8px to 2px) */
+        .pointer-arm::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #fff;
+            /* Taper: Top is 2px wide (37.5% to 62.5%), Bottom is 8px wide (0% to 100%) */
+            clip-path: polygon(37.5% 0, 62.5% 0, 100% 100%, 0% 100%);
+            border-radius: 2px; /* Smooth corners */
+        }
+
+        /* The Counterweight (Tail) */
+        .pointer-arm::after {
+            content: '';
+            position: absolute;
+            top: 100%; left: 0;
+            width: 100%; height: 25px;
+            background: #fff;
+            border-radius: 0 0 4px 4px;
         }
 
         .drag-knob {
@@ -184,6 +206,7 @@
             width: 28px; height: 28px; 
             background: #fff;
             border-radius: 50%; 
+            /* Simple shadow for the knob itself */
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             z-index: 11; pointer-events: auto; cursor: grab;
         }
@@ -396,6 +419,24 @@
             localStorage.setItem('tickingVolLevel', tickingVolLevel);
             updateVolume();
         });
+
+        // --- IOS / MOBILE AUDIO UNLOCK ---
+        // Play and immediately pause all sounds on first interaction
+        // to unlock AudioContext on iOS Safari
+        function unlockAudio() {
+            const sounds = [startSound, alarmSound, tickSound];
+            sounds.forEach(s => {
+                s.play().then(() => {
+                    s.pause();
+                    s.currentTime = 0;
+                }).catch(e => {}); // Ignore error if already unlocked or blocked
+            });
+            // Remove listeners so it only happens once
+            document.removeEventListener('touchstart', unlockAudio);
+            document.removeEventListener('click', unlockAudio);
+        }
+        document.addEventListener('touchstart', unlockAudio);
+        document.addEventListener('click', unlockAudio);
 
         // --- MOBILE "TAP TO WAKE" LOGIC ---
         let controlsTimeout;
