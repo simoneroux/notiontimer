@@ -67,7 +67,7 @@
         body.is-electron .show-in-electron { display: flex !important; }
         body.is-web .show-in-web { display: flex !important; }
 
-        /* --- INNER ICONS (Inside the circle) --- */
+        /* --- INNER ICONS --- */
         .inner-icon {
             position: absolute;
             top: 70px; 
@@ -77,12 +77,9 @@
             transition: opacity 0.3s ease, transform 0.2s;
             padding: 10px;
         }
-        
-        /* Show icons when hovering the TIMER CONTAINER */
         .timer-container:hover .inner-icon { opacity: 0.5; }
         .inner-icon:hover { opacity: 1 !important; transform: scale(1.1); }
         body.mobile-wake .inner-icon { opacity: 0.5 !important; }
-
         .icon-left { left: 70px; } 
         .icon-right { right: 70px; }
 
@@ -98,11 +95,9 @@
             opacity: 0; 
             transition: opacity 0.3s ease;
         }
-
         .timer-container:hover .controls { opacity: 1; }
         body.mobile-wake .controls { opacity: 1 !important; }
         
-        /* Graphics */
         .svg-icon { width: 20px; height: 20px; }
         .wake-icon { fill: none; stroke: var(--icon-color); stroke-width: 2.5; }
         .gear-icon { fill: var(--icon-color); }
@@ -127,7 +122,7 @@
                 #50C8C6 180deg 270deg,   /* Teal: 15-30m */
                 #FFCD00 270deg 300deg,   /* Yellow: 10-15m */
                 #FF9F00 300deg 330deg,   /* Orange: 5-10m */
-                #FF4C4C 330deg 361deg    /* Red: 0-5m (Overlap to fix gap) */
+                #FF4C4C 330deg 361deg    /* Red: 0-5m */
             );
         }
 
@@ -141,7 +136,6 @@
         }
 
         .dial-overlay { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-        /* Ticks aligned to 0 at top, increasing counter-clockwise */
         .tick { position: absolute; background: var(--tick-color); width: 2px; height: 12px; left: calc(50% - 1px); top: 0; transform-origin: 50% 170px; } 
         .tick.major { background: rgba(255, 255, 255, 0.5); width: 3px; height: 20px; left: calc(50% - 1.5px); }
         
@@ -159,7 +153,7 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* --- TAPERED POINTER --- */
+        /* --- ELEGANT POINTER (8px Tapered) --- */
         .pointer-container {
             position: absolute; width: 100%; height: 100%; z-index: 10;
             transform: rotate(var(--angle, 0deg)); 
@@ -177,12 +171,9 @@
             transform-origin: bottom center;
         }
 
-        /* Blade */
+        /* Blade (Tapered) */
         .pointer-arm::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff;
             /* Taper from 8px bottom to 2px top */
             clip-path: polygon(37.5% 0, 62.5% 0, 100% 100%, 0% 100%);
@@ -191,12 +182,8 @@
 
         /* Tail */
         .pointer-arm::after {
-            content: '';
-            position: absolute;
-            top: 100%; left: 0;
-            width: 100%; height: 25px;
-            background: #fff;
-            border-radius: 0 0 4px 4px;
+            content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 25px;
+            background: #fff; border-radius: 0 0 4px 4px;
         }
 
         .drag-knob {
@@ -208,14 +195,7 @@
             z-index: 11; pointer-events: auto; cursor: grab;
         }
         body.is-running .drag-knob { opacity: 0; pointer-events: none; }
-        
-        .drag-knob::before {
-            content: '';
-            position: absolute;
-            top: -20px; bottom: -20px; left: -20px; right: -20px;
-            border-radius: 50%;
-            cursor: grab;
-        }
+        .drag-knob::before { content: ''; position: absolute; top: -20px; bottom: -20px; left: -20px; right: -20px; border-radius: 50%; cursor: grab; }
 
         .center-dot {
             position: absolute; width: 14px; height: 14px;
@@ -236,7 +216,6 @@
         .modal-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px;}
         .modal-btn { padding: 6px 12px; background: #444; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
         .modal-btn.primary { background: #0088FF; }
-
         .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; color: #ccc; }
         input[type="checkbox"] { accent-color: #0088FF; transform: scale(1.1); cursor: pointer; }
         input[type="range"] { width: 80px; accent-color: #0088FF; cursor: pointer; }
@@ -245,268 +224,125 @@
 <body>
 
     <div class="app-wrapper">
-
-        <!-- Timer Circle -->
         <div class="timer-container" id="timerContainer">
-            
-            <!-- Left Icon: Dual Function (Wake Lock / Always on Top) -->
-            <div class="inner-icon icon-left" id="actionBtn">
-                <svg class="svg-icon wake-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /></svg>
-            </div>
-            
-            <!-- Right Icon: Settings -->
-            <div class="inner-icon icon-right" id="webSettingsBtn">
-                <svg class="svg-icon gear-icon" viewBox="0 0 24 24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                </svg>
-            </div>
-
+            <div class="inner-icon icon-left" id="wakeLockBtn"><svg class="svg-icon wake-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /></svg></div>
+            <div class="inner-icon icon-right" id="webSettingsBtn"><svg class="svg-icon gear-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div>
             <div class="dial-colors"></div>
             <div class="dial-mask" id="dialMask"></div>
             <div class="dial-overlay" id="dialOverlay"></div>
-            
-            <div class="top-bar">
-                <div class="app-title">
-                    <span class="time-text" id="headerTime">25:00</span>
-                    <span class="task-name" id="taskNameDisplay">Pomodoro</span>
-                </div>
-            </div>
-
-            <div class="pointer-container" id="pointerContainer">
-                <div class="pointer-arm"><div class="drag-knob"></div></div>
-            </div>
+            <div class="top-bar"><div class="app-title"><span class="time-text" id="headerTime">25:00</span><span class="task-name" id="taskNameDisplay">Pomodoro</span></div></div>
+            <div class="pointer-container" id="pointerContainer"><div class="pointer-arm"><div class="drag-knob"></div></div></div>
             <div class="center-dot"></div>
-            
             <div class="controls">
-                <button class="control-btn" id="resetBtn">
-                    <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
-                </button>
-                <button class="control-btn play" id="playPauseBtn">
-                    <svg class="control-icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </button>
-                <button class="control-btn" id="addTimeBtn">
-                    <svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                </button>
+                <button class="control-btn" id="resetBtn"><svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></button>
+                <button class="control-btn play" id="playPauseBtn"><svg class="control-icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <button class="control-btn" id="addTimeBtn"><svg class="control-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
             </div>
         </div>
 
         <div class="modal" id="settingsModal">
             <div class="modal-box">
                 <h3>Settings</h3>
-                
-                <div class="show-in-web" style="display:none; margin-bottom: 15px;">
-                    <button class="modal-btn primary" id="openAppBtn" style="width:100%;">Open Desktop App</button>
-                </div>
-
-                <!-- VOLUME CONTROLS -->
-                <div class="setting-row">
-                    <span>Sounds Enabled</span>
-                    <input type="checkbox" id="soundEnabledCheck">
-                </div>
-                <div class="setting-row">
-                    <span>Alarm Volume</span>
-                    <input type="range" id="alarmVolumeSlider" min="0" max="100" value="50">
-                </div>
-                
-                <div class="setting-row">
-                    <span>Ticking Sound</span>
-                    <input type="checkbox" id="tickingEnabledCheck">
-                </div>
-                <div class="setting-row">
-                    <span>Ticking Volume</span>
-                    <input type="range" id="tickingVolumeSlider" min="0" max="100" value="30">
-                </div>
-
+                <div class="setting-row show-in-electron" style="display:none;"><span>Always on Top</span><input type="checkbox" id="alwaysOnTopCheck"></div>
+                <div class="show-in-web" style="display:none; margin-bottom: 15px;"><button class="modal-btn primary" id="openAppBtn" style="width:100%;">Open Desktop App</button></div>
+                <div class="setting-row"><span>Sounds Enabled</span><input type="checkbox" id="soundEnabledCheck"></div>
+                <div class="setting-row"><span>Alarm Volume</span><input type="range" id="alarmVolumeSlider" min="0" max="100" value="50"></div>
+                <div class="setting-row"><span>Ticking Sound</span><input type="checkbox" id="tickingEnabledCheck"></div>
+                <div class="setting-row"><span>Ticking Volume</span><input type="range" id="tickingVolumeSlider" min="0" max="100" value="30"></div>
                 <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-                
                 <label style="display: block; text-align: left; color: #aaa; font-size: 11px; margin-bottom: 5px;">SYNC ID</label>
                 <input type="text" id="syncIdInput" placeholder="e.g. my-timer">
-                
-                <div class="modal-actions">
-                    <button class="modal-btn" id="copyIdBtn">Copy ID</button>
-                    <button class="modal-btn primary" id="loadIdBtn">Save</button>
-                    <button class="modal-btn" id="closeModal">Close</button>
-                </div>
+                <div class="modal-actions"><button class="modal-btn" id="copyIdBtn">Copy ID</button><button class="modal-btn primary" id="loadIdBtn">Save</button><button class="modal-btn" id="closeModal">Close</button></div>
             </div>
         </div>
-    
     </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
         
         const isElectron = navigator.userAgent.toLowerCase().includes('electron');
-        
-        if (isElectron) {
-            document.body.classList.add('is-electron');
-            document.documentElement.classList.add('is-electron');
-        } else {
-            document.body.classList.add('is-web');
-        }
+        if (isElectron) { document.body.classList.add('is-electron'); document.documentElement.classList.add('is-electron'); } else { document.body.classList.add('is-web'); }
 
         let ipcRenderer = null;
-        if (isElectron) {
-            try {
-                const electron = window.require('electron');
-                ipcRenderer = electron.ipcRenderer;
-            } catch (e) { console.warn('Electron detected but require failed'); }
-        }
+        if (isElectron) { try { const electron = window.require('electron'); ipcRenderer = electron.ipcRenderer; } catch (e) { console.warn('Electron detected but require failed'); } }
 
         const SUPABASE_URL = 'https://oqdaxvlotnkdrqbrpvhp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xZGF4dmxvdG5rZHJxYnJwdmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MTI0NDUsImV4cCI6MjA3OTE4ODQ0NX0.ZlqSUzCQJSieJPRMA5kwrcsJWCrBAJMSYz8KEW4Zuz8';
         let supabase = null;
         try { supabase = createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error("Supabase Init Error", e); }
 
-        let timeLeft = 25 * 60; let isRunning = false; let isDragging = false; let animationFrame = null;
-        let lastLocalInteraction = 0; 
-        let endTime = 0; 
+        let timeLeft = 25 * 60; let isRunning = false; let isDragging = false; let animationFrame = null; let lastLocalInteraction = 0; let endTime = 0;
 
-        // --- AUDIO CONFIG ---
         const startSound = new Audio('sounds/zengong1.mp3'); 
         const alarmSound = new Audio('sounds/harp.mp3');
         const tickSound = new Audio('sounds/tick.mp3');
         
-        // Load Settings
         let isSoundEnabled = localStorage.getItem('soundEnabled') !== 'false'; 
         let isTickingEnabled = localStorage.getItem('tickingEnabled') !== 'false';
-        
         let alarmVolLevel = parseInt(localStorage.getItem('alarmVolLevel') || '50');
         let tickingVolLevel = parseInt(localStorage.getItem('tickingVolLevel') || '30');
 
         function updateVolume() {
             const aVol = alarmVolLevel / 100;
             const tVol = tickingVolLevel / 100;
-            startSound.volume = aVol;
-            alarmSound.volume = aVol;
-            tickSound.volume = tVol;
+            startSound.volume = aVol; alarmSound.volume = aVol; tickSound.volume = tVol;
         }
         updateVolume();
 
-        // UI Binding
         const soundCheck = document.getElementById('soundEnabledCheck');
         const alarmSlider = document.getElementById('alarmVolumeSlider');
         const tickingCheck = document.getElementById('tickingEnabledCheck');
         const tickingSlider = document.getElementById('tickingVolumeSlider');
 
-        soundCheck.checked = isSoundEnabled;
-        alarmSlider.value = alarmVolLevel;
-        tickingCheck.checked = isTickingEnabled;
-        tickingSlider.value = tickingVolLevel;
+        soundCheck.checked = isSoundEnabled; alarmSlider.value = alarmVolLevel;
+        tickingCheck.checked = isTickingEnabled; tickingSlider.value = tickingVolLevel;
 
-        soundCheck.addEventListener('change', (e) => {
-            isSoundEnabled = e.target.checked;
-            localStorage.setItem('soundEnabled', isSoundEnabled);
-        });
-        alarmSlider.addEventListener('input', (e) => {
-            alarmVolLevel = e.target.value;
-            localStorage.setItem('alarmVolLevel', alarmVolLevel);
-            updateVolume();
-        });
+        soundCheck.addEventListener('change', (e) => { isSoundEnabled = e.target.checked; localStorage.setItem('soundEnabled', isSoundEnabled); });
+        alarmSlider.addEventListener('input', (e) => { alarmVolLevel = e.target.value; localStorage.setItem('alarmVolLevel', alarmVolLevel); updateVolume(); });
+        tickingCheck.addEventListener('change', (e) => { isTickingEnabled = e.target.checked; localStorage.setItem('tickingEnabled', isTickingEnabled); });
+        tickingSlider.addEventListener('input', (e) => { tickingVolLevel = e.target.value; localStorage.setItem('tickingVolLevel', tickingVolLevel); updateVolume(); });
 
-        tickingCheck.addEventListener('change', (e) => {
-            isTickingEnabled = e.target.checked;
-            localStorage.setItem('tickingEnabled', isTickingEnabled);
-        });
-        tickingSlider.addEventListener('input', (e) => {
-            tickingVolLevel = e.target.value;
-            localStorage.setItem('tickingVolLevel', tickingVolLevel);
-            updateVolume();
-        });
-
-        // --- IOS / MOBILE AUDIO UNLOCK ---
+        // AUDIO UNLOCK (IOS FIX)
         function unlockAudio() {
             const sounds = [startSound, alarmSound, tickSound];
-            sounds.forEach(s => {
-                s.play().then(() => {
-                    s.pause();
-                    s.currentTime = 0;
-                }).catch(e => {}); 
-            });
-            document.removeEventListener('touchstart', unlockAudio);
-            document.removeEventListener('click', unlockAudio);
+            sounds.forEach(s => { s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e => {}); });
+            document.removeEventListener('touchstart', unlockAudio); document.removeEventListener('click', unlockAudio);
         }
-        document.addEventListener('touchstart', unlockAudio);
-        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio); document.addEventListener('click', unlockAudio);
 
-        // --- DUAL FUNCTION ACTION BUTTON ---
-        // Left Icon: 
-        //   - Electron: Toggle Always on Top (Default ON)
-        //   - Web: Toggle Wake Lock (Default OFF)
-        
-        const actionBtn = document.getElementById('actionBtn'); // Replaced wakeLockBtn
+        const actionBtn = document.getElementById('wakeLockBtn'); // Left Icon
         let isActionActive = false;
-
-        // Init State
-        if (isElectron) {
-            isActionActive = localStorage.getItem('alwaysOnTop') !== 'false'; // Default True
-            if (ipcRenderer) ipcRenderer.send('set-always-on-top', isActionActive);
-        } else {
-            isActionActive = false; // Wake Lock Default False
-        }
+        if (isElectron) { isActionActive = localStorage.getItem('alwaysOnTop') !== 'false'; if (ipcRenderer) ipcRenderer.send('set-always-on-top', isActionActive); } 
+        else { isActionActive = false; }
         updateActionIcon();
 
         actionBtn.addEventListener('click', async () => {
-            isActionActive = !isActionActive;
-            updateActionIcon();
-
-            if (isElectron && ipcRenderer) {
-                localStorage.setItem('alwaysOnTop', isActionActive);
-                ipcRenderer.send('set-always-on-top', isActionActive);
-            } else {
-                if (isActionActive) { await requestWakeLock(); } else { await releaseWakeLock(); }
-            }
+            isActionActive = !isActionActive; updateActionIcon();
+            if (isElectron && ipcRenderer) { localStorage.setItem('alwaysOnTop', isActionActive); ipcRenderer.send('set-always-on-top', isActionActive); } 
+            else { if (isActionActive) { await requestWakeLock(); } else { await releaseWakeLock(); } }
         });
 
         function updateActionIcon() {
             const icon = actionBtn.querySelector('svg');
-            if(icon) {
-               icon.style.strokeDasharray = isActionActive ? 'none' : '4 4';
-               icon.style.opacity = isActionActive ? '1' : '0.5';
-               icon.style.fill = isActionActive ? 'rgba(255,255,255,0.1)' : 'none';
-            }
+            if(icon) { icon.style.strokeDasharray = isActionActive ? 'none' : '4 4'; icon.style.opacity = isActionActive ? '1' : '0.5'; icon.style.fill = isActionActive ? 'rgba(255,255,255,0.1)' : 'none'; }
         }
 
         let wakeLock = null; 
         async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) { if (isActionActive) { isActionActive = false; updateActionIcon(); } } }
         async function releaseWakeLock() { if (wakeLock !== null) { try { await wakeLock.release(); wakeLock = null; } catch (e) {} } }
-        document.addEventListener('visibilitychange', async () => { 
-            if (!isElectron && isActionActive && document.visibilityState === 'visible') { await requestWakeLock(); } 
-        });
+        document.addEventListener('visibilitychange', async () => { if (!isElectron && isActionActive && document.visibilityState === 'visible') { await requestWakeLock(); } });
 
-        // --- MOBILE "TAP TO WAKE" LOGIC ---
         let controlsTimeout;
-        function wakeControls() {
-            document.body.classList.add('mobile-wake');
-            clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(() => {
-                document.body.classList.remove('mobile-wake');
-            }, 3000);
-        }
-        document.addEventListener('touchstart', wakeControls);
-        document.addEventListener('touchmove', wakeControls);
+        function wakeControls() { document.body.classList.add('mobile-wake'); clearTimeout(controlsTimeout); controlsTimeout = setTimeout(() => { document.body.classList.remove('mobile-wake'); }, 3000); }
+        document.addEventListener('touchstart', wakeControls); document.addEventListener('touchmove', wakeControls);
 
         if (isElectron && ipcRenderer) {
             ipcRenderer.on('open-settings', openSettings);
-            ipcRenderer.on('deep-link', (event, url) => {
-                const rawUrl = url.replace('focustimer://', 'http://dummy.com');
-                handleExternalCommand(new URL(rawUrl).searchParams);
-            });
+            ipcRenderer.on('deep-link', (event, url) => { const rawUrl = url.replace('focustimer://', 'http://dummy.com'); handleExternalCommand(new URL(rawUrl).searchParams); });
         }
-        
         document.getElementById('webSettingsBtn').onclick = openSettings;
-        
-        if (!isElectron) {
-            handleExternalCommand(new URLSearchParams(window.location.search));
-        }
-
-        if (!isElectron) {
-            document.getElementById('openAppBtn').onclick = () => {
-                const id = localStorage.getItem('userId') || 'default';
-                const currentParams = new URLSearchParams(window.location.search);
-                currentParams.set('id', id); 
-                window.location.href = `focustimer://?${currentParams.toString()}`;
-            };
-        }
+        if (!isElectron) { handleExternalCommand(new URLSearchParams(window.location.search)); }
+        if (!isElectron) { document.getElementById('openAppBtn').onclick = () => { const id = localStorage.getItem('userId') || 'default'; const currentParams = new URLSearchParams(window.location.search); currentParams.set('id', id); window.location.href = `focustimer://?${currentParams.toString()}`; }; }
 
         const params = new URLSearchParams(window.location.search);
         let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
@@ -520,21 +356,8 @@
         const playBtn = document.getElementById('playPauseBtn');
         const playIconPath = document.querySelector('#playIcon path');
         
-        document.getElementById('resetBtn').addEventListener('click', () => { 
-            lastLocalInteraction = Date.now();
-            if(isRunning) stopTimer(); 
-            timeLeft = 25 * 60; 
-            updateVisuals(); 
-            syncToSupabase(); 
-        });
-        document.getElementById('addTimeBtn').addEventListener('click', () => { 
-            lastLocalInteraction = Date.now();
-            timeLeft += 60; 
-            if(timeLeft > 3600) timeLeft = 3600; 
-            if(isRunning) endTime = Date.now() + (timeLeft * 1000); 
-            updateVisuals(); 
-            syncToSupabase(); 
-        });
+        document.getElementById('resetBtn').addEventListener('click', () => { lastLocalInteraction = Date.now(); if(isRunning) stopTimer(); timeLeft = 25 * 60; updateVisuals(); syncToSupabase(); });
+        document.getElementById('addTimeBtn').addEventListener('click', () => { lastLocalInteraction = Date.now(); timeLeft += 60; if(timeLeft > 3600) timeLeft = 3600; if(isRunning) endTime = Date.now() + (timeLeft * 1000); updateVisuals(); syncToSupabase(); });
 
         function drawDial() {
             const overlay = document.getElementById('dialOverlay');
@@ -559,11 +382,7 @@
                 }
             }
         }
-        function formatTime(seconds) {
-            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const s = (seconds % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        }
+        function formatTime(seconds) { const m = Math.floor(seconds / 60).toString().padStart(2, '0'); const s = (seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
         function updateVisuals() {
             headerTime.innerText = formatTime(timeLeft);
             const minutes = timeLeft / 60;
@@ -572,15 +391,17 @@
             pointer.style.setProperty('--angle', `${cwDegrees}deg`);
             const mask = document.getElementById('dialMask');
             mask.style.background = `conic-gradient(var(--bg-color) 0deg, var(--bg-color) ${cwDegrees}deg, transparent ${cwDegrees}deg, transparent 360deg)`;
+            document.querySelectorAll('.number').forEach(num => { const val = parseInt(num.dataset.num); if (val <= minutes + 0.1) { num.classList.add('active'); } else { num.classList.remove('active'); } });
             
-            document.querySelectorAll('.number').forEach(num => {
-                const val = parseInt(num.dataset.num);
-                if (val <= minutes + 0.1) {
-                    num.classList.add('active');
-                } else {
-                    num.classList.remove('active');
-                }
-            });
+            // UPDATE LOCK SCREEN WIDGET (MEDIA SESSION)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'Focus Timer',
+                    artist: formatTime(timeLeft) + ' Remaining',
+                    artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }]
+                });
+                navigator.mediaSession.playbackState = isRunning ? 'playing' : 'paused';
+            }
         }
 
         function getMinutesFromEvent(e) {
@@ -597,67 +418,43 @@
             if (minutes >= 59.5) minutes = 0;
             return Math.max(0, Math.min(60, Math.round(minutes)));
         }
-        function handleStart(e) { 
-            if (isRunning) return; 
-            isDragging = true; 
-            lastLocalInteraction = Date.now();
-            let m = getMinutesFromEvent(e); 
-            if(m === 0) m = 60; 
-            timeLeft = m * 60; 
-            updateVisuals(); 
-        }
-        function handleMove(e) { 
-            if (!isDragging) return; 
-            e.preventDefault(); 
-            lastLocalInteraction = Date.now();
-            let m = getMinutesFromEvent(e); 
-            if(m === 0) m = 60; 
-            timeLeft = m * 60; 
-            updateVisuals(); 
-        }
-        function handleEnd() { 
-            if (isDragging) { 
-                isDragging = false; 
-                lastLocalInteraction = Date.now();
-                syncToSupabase(); 
-            } 
-        }
+        function handleStart(e) { if (isRunning) return; isDragging = true; lastLocalInteraction = Date.now(); let m = getMinutesFromEvent(e); if(m === 0) m = 60; timeLeft = m * 60; updateVisuals(); }
+        function handleMove(e) { if (!isDragging) return; e.preventDefault(); lastLocalInteraction = Date.now(); let m = getMinutesFromEvent(e); if(m === 0) m = 60; timeLeft = m * 60; updateVisuals(); }
+        function handleEnd() { if (isDragging) { isDragging = false; lastLocalInteraction = Date.now(); syncToSupabase(); } }
         
-        // INTERACTION FIX: Attach to knob only
         const dragKnob = document.querySelector('.drag-knob');
-        dragKnob.addEventListener('mousedown', handleStart); 
-        dragKnob.addEventListener('touchstart', handleStart); 
-        window.addEventListener('mousemove', handleMove); 
-        window.addEventListener('mouseup', handleEnd); 
-        window.addEventListener('touchmove', handleMove); 
-        window.addEventListener('touchend', handleEnd);
+        dragKnob.addEventListener('mousedown', handleStart); dragKnob.addEventListener('touchstart', handleStart); 
+        window.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd); 
+        window.addEventListener('touchmove', handleMove); window.addEventListener('touchend', handleEnd);
 
-        let tickCounter = 0; 
         function tick() {
             if (!isRunning) return;
             const now = Date.now();
             const remaining = Math.ceil((endTime - now) / 1000);
             
-            // TICK SOUND LOGIC: Only play if ticking enabled AND remaining time changed AND not dragging
-            if (isSoundEnabled && isTickingEnabled && !isDragging) {
+            // TICK SOUND LOGIC: Keep Alive on iOS (Play silent if disabled?)
+            // To keep alive if disabled, we play sound at vol 0.0001? 
+            // Current logic: plays only if enabled. 
+            if (isSoundEnabled && !isDragging) {
                 if (remaining !== timeLeft) {
-                    tickSound.currentTime = 0;
-                    tickSound.play().catch(e => {});
+                     if(isTickingEnabled) {
+                        tickSound.currentTime = 0;
+                        tickSound.play().catch(e => {});
+                     } else {
+                        // Keep alive hack for IOS if silent: Play tick at 0 volume
+                        // Uncomment if needed: 
+                        // tickSound.volume = 0.0001; tickSound.play().catch(e=>{});
+                     }
                 }
             }
 
             if (remaining <= 0) { 
                 timeLeft = 0; 
                 stopTimer(); 
-                if (isSoundEnabled) {
-                    alarmSound.play().catch(e => console.log("Audio error", e)); 
-                }
+                if (isSoundEnabled) { alarmSound.play().catch(e => console.log("Audio error", e)); }
             } 
             else { 
-                if (remaining !== timeLeft) { 
-                    timeLeft = remaining; 
-                    updateVisuals(); 
-                } 
+                if (remaining !== timeLeft) { timeLeft = remaining; updateVisuals(); } 
                 animationFrame = requestAnimationFrame(tick); 
             }
         }
@@ -670,11 +467,7 @@
             document.body.classList.add('is-running'); 
             playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); 
             
-            if (isSoundEnabled) {
-                startSound.currentTime = 0; 
-                startSound.play().catch(e => console.log("Audio error", e)); 
-            }
-            
+            if (isSoundEnabled) { startSound.currentTime = 0; startSound.play().catch(e => console.log("Audio error", e)); }
             tick(); 
             syncToSupabase(); 
         }
@@ -682,18 +475,11 @@
             isRunning = false; 
             lastLocalInteraction = Date.now();
             cancelAnimationFrame(animationFrame); 
-            
-            // FORCE STOP ALL SOUNDS
-            startSound.pause();
-            startSound.currentTime = 0;
-            alarmSound.pause();
-            alarmSound.currentTime = 0;
-            tickSound.pause();
-            tickSound.currentTime = 0;
-
+            startSound.pause(); startSound.currentTime = 0; alarmSound.pause(); alarmSound.currentTime = 0; tickSound.pause(); tickSound.currentTime = 0;
             document.body.classList.remove('is-running'); 
             playIconPath.setAttribute('d', 'M8 5v14l11-7z'); 
             syncToSupabase(); 
+            updateVisuals(); // Update lock screen state
         }
         playBtn.addEventListener('click', () => isRunning ? stopTimer() : startTimer());
 
@@ -707,8 +493,6 @@
             const channel = supabase.channel('timer-sync-' + userId).on('postgres_changes', { event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}` }, payload => {
                     const data = payload.new;
                     if (data.session_id === sessionId) return;
-                    
-                    // CONFLICT RESOLUTION
                     if (Date.now() - lastLocalInteraction < 2500) return;
 
                     if (data.is_running) {
@@ -736,71 +520,19 @@
         }
 
         const modal = document.getElementById('settingsModal');
-        
-        function openSettings() {
-            document.getElementById('syncIdInput').value = localStorage.getItem('userId') || '';
-            modal.classList.add('active');
-        }
-
+        function openSettings() { document.getElementById('syncIdInput').value = localStorage.getItem('userId') || ''; modal.classList.add('active'); }
         function handleExternalCommand(urlParams) {
-            const newId = urlParams.get('id');
-            const newAction = urlParams.get('action');
-            const newDuration = urlParams.get('duration');
-
-            let needsUpdate = false;
-
-            if (newId && newId !== localStorage.getItem('userId')) {
-                localStorage.setItem('userId', newId);
-                userId = newId; 
-                needsUpdate = true;
-                if(supabase) supabase.removeAllChannels();
-                initSync();
-            }
-
-            if (newDuration) {
-                const minutes = parseInt(newDuration);
-                if (!isNaN(minutes) && minutes > 0) {
-                    timeLeft = minutes * 60;
-                    lastLocalInteraction = Date.now();
-                    needsUpdate = true;
-                }
-            }
-
-            if (newAction === 'start') {
-                if (!isRunning) {
-                    setTimeout(() => startTimer(), 500); 
-                    needsUpdate = false; 
-                } else if (needsUpdate) {
-                    syncToSupabase(); 
-                    updateVisuals();
-                }
-            } else if (needsUpdate) {
-                updateVisuals();
-                syncToSupabase();
-            }
+            const newId = urlParams.get('id'); const newAction = urlParams.get('action'); const newDuration = urlParams.get('duration'); let needsUpdate = false;
+            if (newId && newId !== localStorage.getItem('userId')) { localStorage.setItem('userId', newId); userId = newId; needsUpdate = true; if(supabase) supabase.removeAllChannels(); initSync(); }
+            if (newDuration) { const minutes = parseInt(newDuration); if (!isNaN(minutes) && minutes > 0) { timeLeft = minutes * 60; lastLocalInteraction = Date.now(); needsUpdate = true; } }
+            if (newAction === 'start') { if (!isRunning) { setTimeout(() => startTimer(), 500); needsUpdate = false; } else if (needsUpdate) { syncToSupabase(); updateVisuals(); } } else if (needsUpdate) { updateVisuals(); syncToSupabase(); }
         }
 
-        if (isElectron && ipcRenderer) {
-            ipcRenderer.on('open-settings', openSettings);
-            ipcRenderer.on('deep-link', (event, url) => {
-                const rawUrl = url.replace('focustimer://', 'http://dummy.com');
-                handleExternalCommand(new URL(rawUrl).searchParams);
-            });
-        } else {
-            document.getElementById('webSettingsBtn').onclick = openSettings;
-            handleExternalCommand(new URLSearchParams(window.location.search));
-        }
+        if (isElectron && ipcRenderer) { ipcRenderer.on('open-settings', openSettings); ipcRenderer.on('deep-link', (event, url) => { const rawUrl = url.replace('focustimer://', 'http://dummy.com'); handleExternalCommand(new URL(rawUrl).searchParams); }); } 
+        else { document.getElementById('webSettingsBtn').onclick = openSettings; handleExternalCommand(new URLSearchParams(window.location.search)); }
 
         document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
-        document.getElementById('loadIdBtn').onclick = () => { 
-            const id = document.getElementById('syncIdInput').value.trim(); 
-            if(id) { 
-                localStorage.setItem('userId', id); 
-                userId = id; 
-                if(isElectron) location.reload(); else { if(supabase) supabase.removeAllChannels(); initSync(); }
-                modal.classList.remove('active');
-            } 
-        };
+        document.getElementById('loadIdBtn').onclick = () => { const id = document.getElementById('syncIdInput').value.trim(); if(id) { localStorage.setItem('userId', id); userId = id; if(isElectron) location.reload(); else { if(supabase) supabase.removeAllChannels(); initSync(); } modal.classList.remove('active'); } };
         document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(`ID: ${userId}`); alert('ID copied to clipboard!'); };
         
         drawDial(); updateVisuals(); initSync();
