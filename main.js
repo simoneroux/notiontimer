@@ -1,5 +1,8 @@
-const { app, BrowserWindow, Menu, shell } = require('electron')
+const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron')
 const path = require('path')
+
+// Store the window position before we center it for settings
+let originalPosition = null
 
 function createWindow () {
   const win = new BrowserWindow({
@@ -16,15 +19,55 @@ function createWindow () {
     }
   })
 
+  // Ensure it starts on top with the correct level
+  win.setAlwaysOnTop(true, 'floating')
   win.loadFile('index.html')
 }
+
+// --- IPC HANDLERS ---
+
+// 1. Resize for Settings (Save Position & Center)
+ipcMain.on('set-settings-mode', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) {
+    // Save current position
+    originalPosition = win.getPosition()
+    
+    win.setResizable(true)
+    win.setSize(350, 500, false) // false = no animation
+    win.center()
+  }
+})
+
+// 2. Shrink back to Widget (Restore Position)
+ipcMain.on('set-small-mode', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) {
+    win.setSize(180, 180, false) // false = no animation
+    win.setResizable(false)
+    win.setAlwaysOnTop(true, 'floating') // Re-assert always on top when shrinking
+    
+    // Restore original position if we have one
+    if (originalPosition) {
+      win.setPosition(originalPosition[0], originalPosition[1], false) // false = no easing/animation
+    }
+  }
+})
+
+// 3. Toggle Always on Top
+ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) {
+    // 'floating' level is required on macOS to stay above other standard windows
+    win.setAlwaysOnTop(isAlwaysOnTop, 'floating')
+  }
+})
 
 // --- CREATE CUSTOM MENU ---
 function createMenu() {
   const isMac = process.platform === 'darwin'
 
   const template = [
-    // { role: 'appMenu' }
     ...(isMac ? [{
       label: app.name,
       submenu: [
@@ -32,9 +75,8 @@ function createMenu() {
         { type: 'separator' },
         { 
             label: 'Settings...', 
-            accelerator: 'CmdOrCtrl+,', // Standard Mac shortcut
+            accelerator: 'CmdOrCtrl+,', 
             click: async () => {
-                // Send a message to index.html to open the modal
                 const win = BrowserWindow.getFocusedWindow()
                 if(win) win.webContents.send('open-settings')
             } 
@@ -49,14 +91,12 @@ function createMenu() {
         { role: 'quit' }
       ]
     }] : []),
-    // { role: 'fileMenu' }
     {
       label: 'File',
       submenu: [
         isMac ? { role: 'close' } : { role: 'quit' }
       ]
     },
-    // { role: 'viewMenu' } - Useful for debugging if needed
     {
       label: 'View',
       submenu: [
@@ -72,7 +112,7 @@ function createMenu() {
 }
 
 app.whenReady().then(() => {
-  createMenu() // <--- Build the menu before creating window
+  createMenu() 
   createWindow()
 
   app.on('activate', () => {

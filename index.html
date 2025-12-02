@@ -39,6 +39,16 @@
         body.is-electron {
             background: transparent !important;
             zoom: 0.45; /* Widget Zoom */
+            /* NO TRANSITION: Ensures instant snap to avoid cropping visual artifacts */
+        }
+
+        /* --- SETTINGS ACTIVE MODE (ELECTRON) --- */
+        body.is-electron.settings-active {
+            zoom: 1 !important; /* Reset zoom to read text */
+        }
+        
+        body.is-electron.settings-active .modal {
+            border-radius: 12px;
         }
 
         .app-wrapper {
@@ -208,7 +218,7 @@
         .control-btn:hover { opacity: 1; } .control-btn:hover .control-icon { fill: #fff; }
         .control-btn.play .control-icon { width: 38px; height: 38px; fill: #ccc; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; border-radius: 50%; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-box { background: #333; padding: 25px; border-radius: 12px; width: 280px; text-align: center; border: 1px solid #444; color: #fff;}
         .modal-box h3 { color: #fff; margin-bottom: 20px; font-weight: 500;}
@@ -244,7 +254,7 @@
             <div class="modal-box">
                 <h3>Settings</h3>
                 <div class="setting-row show-in-electron" style="display:none;"><span>Always on Top</span><input type="checkbox" id="alwaysOnTopCheck"></div>
-                <div class="show-in-web" style="display:none; margin-bottom: 15px;"><button class="modal-btn primary" id="openAppBtn" style="width:100%;">Open Desktop App</button></div>
+                <!-- Removed Desktop App Button -->
                 <div class="setting-row"><span>Sounds Enabled</span><input type="checkbox" id="soundEnabledCheck"></div>
                 <div class="setting-row"><span>Alarm Volume</span><input type="range" id="alarmVolumeSlider" min="0" max="100" value="50"></div>
                 <div class="setting-row"><span>Ticking Sound</span><input type="checkbox" id="tickingEnabledCheck"></div>
@@ -312,14 +322,39 @@
 
         const actionBtn = document.getElementById('wakeLockBtn'); // Left Icon
         let isActionActive = false;
-        if (isElectron) { isActionActive = localStorage.getItem('alwaysOnTop') !== 'false'; if (ipcRenderer) ipcRenderer.send('set-always-on-top', isActionActive); } 
-        else { isActionActive = false; }
+        
+        if (isElectron) { 
+            // Check storage or default to true
+            isActionActive = localStorage.getItem('alwaysOnTop') !== 'false'; 
+            // Initialize checkbox visual
+            if(document.getElementById('alwaysOnTopCheck')) {
+               document.getElementById('alwaysOnTopCheck').checked = isActionActive;
+            }
+            if (ipcRenderer) ipcRenderer.send('set-always-on-top', isActionActive); 
+        } else { 
+            isActionActive = false; 
+        }
         updateActionIcon();
 
+        // Handle Main Screen Icon Click
         actionBtn.addEventListener('click', async () => {
             isActionActive = !isActionActive; updateActionIcon();
-            if (isElectron && ipcRenderer) { localStorage.setItem('alwaysOnTop', isActionActive); ipcRenderer.send('set-always-on-top', isActionActive); } 
+            if (isElectron && ipcRenderer) { 
+                localStorage.setItem('alwaysOnTop', isActionActive); 
+                document.getElementById('alwaysOnTopCheck').checked = isActionActive; // Sync checkbox
+                ipcRenderer.send('set-always-on-top', isActionActive); 
+            } 
             else { if (isActionActive) { await requestWakeLock(); } else { await releaseWakeLock(); } }
+        });
+
+        // Handle Settings Checkbox Click
+        document.getElementById('alwaysOnTopCheck').addEventListener('change', (e) => {
+            isActionActive = e.target.checked;
+            updateActionIcon();
+            if (isElectron && ipcRenderer) { 
+                localStorage.setItem('alwaysOnTop', isActionActive); 
+                ipcRenderer.send('set-always-on-top', isActionActive); 
+            }
         });
 
         function updateActionIcon() {
@@ -342,7 +377,8 @@
         }
         document.getElementById('webSettingsBtn').onclick = openSettings;
         if (!isElectron) { handleExternalCommand(new URLSearchParams(window.location.search)); }
-        if (!isElectron) { document.getElementById('openAppBtn').onclick = () => { const id = localStorage.getItem('userId') || 'default'; const currentParams = new URLSearchParams(window.location.search); currentParams.set('id', id); window.location.href = `focustimer://?${currentParams.toString()}`; }; }
+        
+        // Removed openAppBtn handler as requested
 
         const params = new URLSearchParams(window.location.search);
         let userId = localStorage.getItem('userId') || 'u_' + Math.random().toString(36).substr(2, 5);
@@ -432,18 +468,11 @@
             const now = Date.now();
             const remaining = Math.ceil((endTime - now) / 1000);
             
-            // TICK SOUND LOGIC: Keep Alive on iOS (Play silent if disabled?)
-            // To keep alive if disabled, we play sound at vol 0.0001? 
-            // Current logic: plays only if enabled. 
             if (isSoundEnabled && !isDragging) {
                 if (remaining !== timeLeft) {
                      if(isTickingEnabled) {
                         tickSound.currentTime = 0;
                         tickSound.play().catch(e => {});
-                     } else {
-                        // Keep alive hack for IOS if silent: Play tick at 0 volume
-                        // Uncomment if needed: 
-                        // tickSound.volume = 0.0001; tickSound.play().catch(e=>{});
                      }
                 }
             }
@@ -479,7 +508,7 @@
             document.body.classList.remove('is-running'); 
             playIconPath.setAttribute('d', 'M8 5v14l11-7z'); 
             syncToSupabase(); 
-            updateVisuals(); // Update lock screen state
+            updateVisuals(); 
         }
         playBtn.addEventListener('click', () => isRunning ? stopTimer() : startTimer());
 
@@ -520,7 +549,34 @@
         }
 
         const modal = document.getElementById('settingsModal');
-        function openSettings() { document.getElementById('syncIdInput').value = localStorage.getItem('userId') || ''; modal.classList.add('active'); }
+        
+        function openSettings() { 
+            document.getElementById('syncIdInput').value = localStorage.getItem('userId') || ''; 
+            modal.classList.add('active'); 
+            
+            // ELECTRON RESIZE LOGIC
+            if (isElectron && ipcRenderer) {
+                document.body.classList.add('settings-active');
+                ipcRenderer.send('set-settings-mode');
+            }
+        }
+
+        function closeSettings() {
+            modal.classList.remove('active');
+            
+            if (isElectron && ipcRenderer) {
+                // 1. Instantly reset zoom
+                document.body.classList.remove('settings-active');
+                
+                // 2. WAIT A TINY BIT before shrinking the window
+                // This ensures the renderer has repainted the content at small size (zoom 0.45)
+                // BEFORE the window physically shrinks. Prevents the "cropped content" glitch.
+                setTimeout(() => {
+                    ipcRenderer.send('set-small-mode');
+                }, 50);
+            }
+        }
+
         function handleExternalCommand(urlParams) {
             const newId = urlParams.get('id'); const newAction = urlParams.get('action'); const newDuration = urlParams.get('duration'); let needsUpdate = false;
             if (newId && newId !== localStorage.getItem('userId')) { localStorage.setItem('userId', newId); userId = newId; needsUpdate = true; if(supabase) supabase.removeAllChannels(); initSync(); }
@@ -531,8 +587,29 @@
         if (isElectron && ipcRenderer) { ipcRenderer.on('open-settings', openSettings); ipcRenderer.on('deep-link', (event, url) => { const rawUrl = url.replace('focustimer://', 'http://dummy.com'); handleExternalCommand(new URL(rawUrl).searchParams); }); } 
         else { document.getElementById('webSettingsBtn').onclick = openSettings; handleExternalCommand(new URLSearchParams(window.location.search)); }
 
-        document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
-        document.getElementById('loadIdBtn').onclick = () => { const id = document.getElementById('syncIdInput').value.trim(); if(id) { localStorage.setItem('userId', id); userId = id; if(isElectron) location.reload(); else { if(supabase) supabase.removeAllChannels(); initSync(); } modal.classList.remove('active'); } };
+        document.getElementById('closeModal').onclick = closeSettings;
+        
+        document.getElementById('loadIdBtn').onclick = () => { 
+            const id = document.getElementById('syncIdInput').value.trim(); 
+            if(id) { 
+                localStorage.setItem('userId', id); 
+                userId = id; 
+                
+                if(isElectron) {
+                    // Similar logic: Reset zoom, wait, then reload/resize
+                    document.body.classList.remove('settings-active');
+                    setTimeout(() => {
+                         ipcRenderer.send('set-small-mode');
+                         setTimeout(() => location.reload(), 100);
+                    }, 50);
+                } else { 
+                    if(supabase) supabase.removeAllChannels(); 
+                    initSync(); 
+                } 
+                modal.classList.remove('active'); 
+            } 
+        };
+        
         document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(`ID: ${userId}`); alert('ID copied to clipboard!'); };
         
         drawDial(); updateVisuals(); initSync();
