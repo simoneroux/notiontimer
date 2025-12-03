@@ -1,1 +1,28 @@
+Dependencies
+
+node_modules/
+package-lock.json
+yarn.lock
+
+Build Output (Don't commit the compiled app!)
+
+dist/
+release/
+build/
+out/
+
+System Files
+
 .DS_Store
+Thumbs.db
+
+Logs
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+Environment variables (If you ever extract keys)
+
+.env
+.env.local
