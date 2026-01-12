@@ -802,11 +802,32 @@
             const payload = { id: userId, end_time: isRunning ? endTime : null, is_running: isRunning, paused_remaining: isRunning ? null : timeLeft, task_name: "Timer", session_id: sessionId, updated_at: Date.now() };
             try { await supabase.from('timers').upsert(payload); } catch (err) { console.error("Sync error", err); }
         }
-        function initSync() {
+        let currentChannel = null;
+        let lastRemoteUpdate = 0;
+
+        async function initSync() {
             if (!supabase) return;
-            const channel = supabase.channel('timer-sync-' + userId).on('postgres_changes', { event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}` }, payload => {
+            // Idempotency: Remove existing channel if present
+            if (currentChannel) {
+                await supabase.removeChannel(currentChannel);
+                currentChannel = null;
+            }
+
+            currentChannel = supabase.channel('timer-sync-' + userId).on('postgres_changes', { event: '*', schema: 'public', table: 'timers', filter: `id=eq.${userId}` }, payload => {
                 const data = payload.new;
+                // Ignore our own updates from this session
                 if (data.session_id === sessionId) return;
+
+                // Ignore stale updates (older than what we've already seen or just processed)
+                // We use a small buffer or strict check. Since we want to capture "latest", strict > is good.
+                // data.updated_at is a timestamp (number) in our payload.
+                if (data.updated_at && data.updated_at < lastRemoteUpdate) {
+                    // console.log("Ignored stale update", data.updated_at, lastRemoteUpdate);
+                    return;
+                }
+                lastRemoteUpdate = data.updated_at || Date.now();
+
+                // Prevent feedback loops: if we just interacted locally, ignore remote echoes for a moment
                 if (Date.now() - lastLocalInteraction < 2500) return;
 
                 if (data.is_running) {
@@ -822,8 +843,14 @@
                 }
                 updateVisuals();
             }).subscribe();
+
             supabase.from('timers').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
                 if (!error && data) {
+                    // Initial fetch: also check staleness if we were to be very strict, 
+                    // but usually initial fetch is "truth" until we get stream updates.
+                    // We'll update lastRemoteUpdate to this check.
+                    lastRemoteUpdate = data.updated_at || Date.now();
+
                     if (data.is_running) {
                         const secondsLeft = Math.ceil((data.end_time - Date.now()) / 1000);
                         if (secondsLeft > 0) { endTime = data.end_time; timeLeft = secondsLeft; if (!isRunning) { isRunning = true; document.body.classList.add('is-running'); playIconPath.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); tick(); } } else { timeLeft = 0; }
@@ -864,7 +891,7 @@
 
         function handleExternalCommand(urlParams) {
             const newId = urlParams.get('id'); const newAction = urlParams.get('action'); const newDuration = urlParams.get('duration'); let needsUpdate = false;
-            if (newId && newId !== localStorage.getItem('userId')) { localStorage.setItem('userId', newId); userId = newId; needsUpdate = true; if (supabase) supabase.removeAllChannels(); initSync(); }
+            if (newId && newId !== localStorage.getItem('userId')) { localStorage.setItem('userId', newId); userId = newId; needsUpdate = true; initSync(); }
             if (newDuration) { const minutes = parseInt(newDuration); if (!isNaN(minutes) && minutes > 0) { timeLeft = minutes * 60; lastLocalInteraction = Date.now(); needsUpdate = true; } }
             if (newAction === 'start') { if (!isRunning) { setTimeout(() => startTimer(), 500); needsUpdate = false; } else if (needsUpdate) { syncToSupabase(); updateVisuals(); } } else if (needsUpdate) { updateVisuals(); syncToSupabase(); }
         }
@@ -888,7 +915,6 @@
                         setTimeout(() => location.reload(), 100);
                     }, 50);
                 } else {
-                    if (supabase) supabase.removeAllChannels();
                     initSync();
                 }
                 modal.classList.remove('active');
