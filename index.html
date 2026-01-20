@@ -804,7 +804,7 @@
         let currentChannel = null;
         let lastRemoteUpdate = 0;
 
-        async function initSync() {
+        async function initSync(skipInitialFetch = false) {
             if (!supabase) return;
             // Idempotency: Remove existing channel if present
             if (currentChannel) {
@@ -842,6 +842,9 @@
                 }
                 updateVisuals();
             }).subscribe();
+
+            // Skip initial fetch if URL parameters were just applied
+            if (skipInitialFetch) return;
 
             supabase.from('timers').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
                 if (!error && data) {
@@ -893,6 +896,7 @@
             if (newId && newId !== localStorage.getItem('userId')) { localStorage.setItem('userId', newId); userId = newId; needsUpdate = true; initSync(); }
             if (newDuration) { const minutes = parseInt(newDuration); if (!isNaN(minutes) && minutes > 0) { timeLeft = minutes * 60; lastLocalInteraction = Date.now(); needsUpdate = true; } }
             if (newAction === 'start') { if (!isRunning) { setTimeout(() => startTimer(), 500); needsUpdate = false; } else if (needsUpdate) { syncToSupabase(); updateVisuals(); } } else if (needsUpdate) { updateVisuals(); syncToSupabase(); }
+            return needsUpdate; // Return true if we applied URL parameters
         }
 
         if (isElectron && ipcRenderer) { ipcRenderer.on('open-settings', openSettings); ipcRenderer.on('deep-link', (event, url) => { const rawUrl = url.replace('focustimer://', 'http://dummy.com'); handleExternalCommand(new URL(rawUrl).searchParams); }); }
@@ -922,10 +926,13 @@
 
         document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(`ID: ${userId}`); alert('ID copied to clipboard!'); };
 
-        drawDial(); updateVisuals(); initSync();
+        drawDial(); updateVisuals();
 
         // Handle URL parameters after DOM is fully initialized
-        if (!isElectron) { handleExternalCommand(new URLSearchParams(window.location.search)); }
+        const urlParamsApplied = !isElectron && handleExternalCommand(new URLSearchParams(window.location.search));
+
+        // Initialize sync, but skip initial fetch if URL parameters were just applied
+        initSync(urlParamsApplied);
     </script>
 </body>
 
