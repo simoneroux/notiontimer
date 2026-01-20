@@ -661,7 +661,6 @@
             ipcRenderer.on('deep-link', (event, url) => { const rawUrl = url.replace('focustimer://', 'http://dummy.com'); handleExternalCommand(new URL(rawUrl).searchParams); });
         }
         document.getElementById('webSettingsBtn').onclick = openSettings;
-        if (!isElectron) { handleExternalCommand(new URLSearchParams(window.location.search)); }
 
         // Removed openAppBtn handler as requested
 
@@ -924,6 +923,9 @@
         document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(`ID: ${userId}`); alert('ID copied to clipboard!'); };
 
         drawDial(); updateVisuals(); initSync();
+
+        // Handle URL parameters after DOM is fully initialized
+        if (!isElectron) { handleExternalCommand(new URLSearchParams(window.location.search)); }
     </script>
 </body>
 
